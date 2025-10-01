@@ -40,18 +40,15 @@ def gjk_collision_detection(A, B, max_iterations=20):
     4) Update simplex & direction
     5) Repeat
     """
-    # Initialize
+
     simplex = []
-    direction = np.array([1.0, 0.0])  # Initial direction
+    direction = np.array([1.0, 0.0])  
     steps = []
     
     for iteration in range(max_iterations):
-        # 1) Pick direction (already have it)
-        
-        # 2) Get support point
+
         support_point = support_minkowski(A, B, direction)
         
-        # 3) Check dot(a, d) ≤ 0 → No collision
         if np.dot(support_point, direction) <= 0:
             steps.append({
                 'iteration': iteration,
@@ -63,10 +60,8 @@ def gjk_collision_detection(A, B, max_iterations=20):
             })
             return False, steps
         
-        # Add support point to simplex
         simplex.append(support_point)
         
-        # Record this step
         steps.append({
             'iteration': iteration,
             'direction': direction.copy(),
@@ -75,8 +70,7 @@ def gjk_collision_detection(A, B, max_iterations=20):
             'collision': None,
             'reason': f'Added support point to simplex (size: {len(simplex)})'
         })
-        
-        # 4) Update simplex & direction
+
         collision, new_direction = handle_simplex(simplex)
         
         if collision:
@@ -86,11 +80,10 @@ def gjk_collision_detection(A, B, max_iterations=20):
         
         direction = new_direction
         
-        # Remove excess points from simplex (keep only relevant ones)
         if len(simplex) > 3:
             simplex = simplex[-3:]
     
-    # Max iterations reached
+
     return False, steps
 
 def handle_simplex(simplex):
@@ -102,49 +95,40 @@ def handle_simplex(simplex):
     If yes, the shapes collide. If not, we update the search direction and keep going.
     """
     if len(simplex) == 1:
-        # Point case: direction towards origin
         return False, -simplex[0]
     
     elif len(simplex) == 2:
-        # Line case
-        a, b = simplex[1], simplex[0]  # a is newest point
+        a, b = simplex[1], simplex[0] 
         ab = b - a
-        ao = -a  # direction to origin from a
+        ao = -a  
         
-        # Is origin in direction of line segment?
         if np.dot(ab, ao) > 0:
-            # Origin might be past the line segment
             direction = triple_product(ab, ao, ab)
             if np.linalg.norm(direction) < 1e-10:
                 direction = perpendicular_2d(ab)
         else:
-            # Origin is behind point a, remove b
             simplex[:] = [a]
             direction = ao
         
         return False, direction
     
     elif len(simplex) == 3:
-        # Triangle case
-        a, b, c = simplex[2], simplex[1], simplex[0]  # a is newest point
+        a, b, c = simplex[2], simplex[1], simplex[0]  
         ab = b - a
         ac = c - a
         ao = -a
         
-        # Check if origin is inside triangle
+
         abc_perp = triple_product(ac, ab, ab)
         acb_perp = triple_product(ab, ac, ac)
         
         if np.dot(abc_perp, ao) > 0:
-            # Origin is on AB side
             simplex[:] = [a, b]
             return False, abc_perp
         elif np.dot(acb_perp, ao) > 0:
-            # Origin is on AC side  
             simplex[:] = [a, c]
             return False, acb_perp
         else:
-            # Origin is inside triangle!
             return True, None
     
     return False, np.array([1.0, 0.0])
