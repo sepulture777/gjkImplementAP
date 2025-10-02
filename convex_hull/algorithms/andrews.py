@@ -33,45 +33,95 @@ def andrews_algorithm(points: List[Point], step_mode: bool = False):
     """    
     Args:
         points: Liste von (x,y)-Tupeln
-        step_mode: True -> gibt Liste von Zwischenschritten zurück
+        step_mode: True -> gibt Liste von Zwischenschritten als Dicts zurück
                    False -> gibt fertige Hülle zurück
     
     Returns:
-        hull (list[Point]) oder steps (list[list[Point]])
+        hull (list[Point]) oder steps (list[dict])
     """
     if len(points) <= 1:
+        if step_mode:
+            return [{
+                "step": 0,
+                "hull": list(points),
+                "description": "Only one or zero points - hull is complete",
+                "active": list(points),
+                "phase": "complete"
+            }]
         return points
 
     pts = merge_sort(points)
-
     steps = [] if step_mode else None
+    step_counter = 0
 
     # Untere Hülle
     lower = []
-    for p in pts:
+    for i, p in enumerate(pts):
+        # Remove points that make right turn
         while len(lower) >= 2 and orientation(lower[-2], lower[-1], p) <= 0:
-            lower.pop()
+            removed = lower.pop()
             if step_mode:
-                steps.append(lower.copy())
+                steps.append({
+                    "step": step_counter,
+                    "hull": lower.copy(),
+                    "description": f"Removed point {removed} (makes right turn)",
+                    "active": [removed],
+                    "phase": "lower_hull"
+                })
+                step_counter += 1
+        
+        # Add current point
         lower.append(p)
         if step_mode:
-            steps.append(lower.copy())
+            steps.append({
+                "step": step_counter,
+                "hull": lower.copy(),
+                "description": f"Added point {p} to lower hull ({i+1}/{len(pts)})",
+                "active": [p],
+                "phase": "lower_hull"
+            })
+            step_counter += 1
 
     # Obere Hülle
     upper = []
-    for p in reversed(pts):
+    reversed_pts = list(reversed(pts))
+    for i, p in enumerate(reversed_pts):
+        # Remove points that make right turn
         while len(upper) >= 2 and orientation(upper[-2], upper[-1], p) <= 0:
-            upper.pop()
+            removed = upper.pop()
             if step_mode:
-                steps.append(upper.copy())
+                steps.append({
+                    "step": step_counter,
+                    "hull": upper.copy(),
+                    "description": f"Removed point {removed} (makes right turn)",
+                    "active": [removed],
+                    "phase": "upper_hull"
+                })
+                step_counter += 1
+        
+        # Add current point
         upper.append(p)
         if step_mode:
-            steps.append(upper.copy())
+            steps.append({
+                "step": step_counter,
+                "hull": upper.copy(),
+                "description": f"Added point {p} to upper hull ({i+1}/{len(reversed_pts)})",
+                "active": [p],
+                "phase": "upper_hull"
+            })
+            step_counter += 1
 
+    # Combine lower and upper hull
     hull = lower[:-1] + upper[:-1]
 
     if step_mode:
-        steps.append(hull) 
+        steps.append({
+            "step": step_counter,
+            "hull": hull,
+            "description": "Combined lower and upper hull - complete!",
+            "active": [],
+            "phase": "complete"
+        })
         return steps
     else:
         return hull
