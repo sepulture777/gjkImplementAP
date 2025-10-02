@@ -1,6 +1,6 @@
 from data.generator import generate_points
 from algorithms.andrews import andrews_algorithm
-
+from algorithms.quick import printHull
 
 def main():
     
@@ -13,12 +13,15 @@ def main():
     hull = andrews_algorithm(points)
     print("Fertige Huelle:", hull)
 
-
     # Step-by-step
     steps = andrews_algorithm(points, step_mode=True)
     print(f"{len(steps)} Schritte.")
     for i, s in enumerate(steps):
         print(f"Step {i+1}: {s}")
+    
+    
+    # Quick Hull Algorithmus
+    printHull(points, len(points))
 
 if __name__ == "__main__":
     main()
