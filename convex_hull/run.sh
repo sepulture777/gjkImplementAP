@@ -34,9 +34,9 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
-# Start backend
+# Start backend (API folder)
 echo "📦 Starting FastAPI backend on http://localhost:8000"
-uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000 &
+uvicorn API.main:app --reload --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
 
 # Wait a bit for backend to start

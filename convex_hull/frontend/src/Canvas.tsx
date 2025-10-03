@@ -10,6 +10,7 @@ interface CanvasProps {
   currentStep: AlgorithmStep | null;
   onAddPoint: (point: Point) => void;
   canEdit: boolean;
+  isLastStep?: boolean;  // To know if we should draw complete hull
   width?: number;
   height?: number;
 }
@@ -19,6 +20,7 @@ export function Canvas({
   currentStep, 
   onAddPoint, 
   canEdit,
+  isLastStep = false,
   width = 800,
   height = 600
 }: CanvasProps) {
@@ -75,17 +77,18 @@ export function Canvas({
     });
 
     if (currentStep) {
-      // Draw hull lines (red)
+      // Draw hull lines
       if (currentStep.hull.length > 1) {
-        ctx.strokeStyle = currentStep.phase === 'complete' ? '#22c55e' : '#ef4444';
-        ctx.lineWidth = currentStep.phase === 'complete' ? 3 : 2;
+        // Green if last step (complete), red if in progress
+        ctx.strokeStyle = isLastStep ? '#22c55e' : '#ef4444';
+        ctx.lineWidth = isLastStep ? 3 : 2;
         ctx.beginPath();
         ctx.moveTo(currentStep.hull[0][0], currentStep.hull[0][1]);
         for (let i = 1; i < currentStep.hull.length; i++) {
           ctx.lineTo(currentStep.hull[i][0], currentStep.hull[i][1]);
         }
-        // Close the hull if complete
-        if (currentStep.phase === 'complete') {
+        // Close the hull if complete (last step)
+        if (isLastStep) {
           ctx.lineTo(currentStep.hull[0][0], currentStep.hull[0][1]);
           
           // Fill with semi-transparent green
@@ -121,7 +124,7 @@ export function Canvas({
         ctx.stroke();
       });
     }
-  }, [points, currentStep, width, height]);
+  }, [points, currentStep, isLastStep, width, height]);
 
   return (
     <div style={{ border: '2px solid #444', borderRadius: '8px', display: 'inline-block' }}>

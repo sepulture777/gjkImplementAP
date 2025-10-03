@@ -106,11 +106,13 @@ export function Controls({
               color: 'white',
               border: '1px solid #444',
               borderRadius: '4px',
-              minWidth: '200px'
+              minWidth: '200px',
+              cursor: hasSteps ? 'not-allowed' : 'pointer',
+              opacity: hasSteps ? 0.5 : 1
             }}
           >
             <option value="andrews">Andrew's Monotone Chain</option>
-            <option value="quickhull" disabled>QuickHull (Coming Soon)</option>
+            <option value="quickhull">QuickHull</option>
           </select>
           <button 
             onClick={onRun} 

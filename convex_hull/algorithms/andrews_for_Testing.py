@@ -1,3 +1,9 @@
+"""
+Andrew's Monotone Chain Algorithm - Testing Version
+Outputs simple hull snapshots (no metadata)
+This simulates what the real implementation will provide.
+"""
+
 from typing import List, Tuple
 
 Point = Tuple[float, float]
@@ -31,97 +37,58 @@ def merge(left: List[Point], right: List[Point]) -> List[Point]:
 
 def andrews_algorithm(points: List[Point], step_mode: bool = False):
     """    
+    Andrew's Monotone Chain Algorithm
+    
     Args:
         points: Liste von (x,y)-Tupeln
-        step_mode: True -> gibt Liste von Zwischenschritten als Dicts zurück
+        step_mode: True -> gibt Liste von Zwischenschritten zurück
                    False -> gibt fertige Hülle zurück
     
     Returns:
-        hull (list[Point]) oder steps (list[dict])
+        if step_mode=False: List[Point]           - Final hull
+        if step_mode=True:  List[List[Point]]     - Hull snapshots at each step
     """
     if len(points) <= 1:
         if step_mode:
-            return [{
-                "step": 0,
-                "hull": list(points),
-                "description": "Only one or zero points - hull is complete",
-                "active": list(points),
-                "phase": "complete"
-            }]
+            return [list(points)]  # Single snapshot
         return points
 
     pts = merge_sort(points)
     steps = [] if step_mode else None
-    step_counter = 0
 
-    # Untere Hülle
+    # Untere Hülle (Lower Hull)
     lower = []
-    for i, p in enumerate(pts):
+    for p in pts:
         # Remove points that make right turn
         while len(lower) >= 2 and orientation(lower[-2], lower[-1], p) <= 0:
-            removed = lower.pop()
+            lower.pop()
             if step_mode:
-                steps.append({
-                    "step": step_counter,
-                    "hull": lower.copy(),
-                    "description": f"Removed point {removed} (makes right turn)",
-                    "active": [removed],
-                    "phase": "lower_hull"
-                })
-                step_counter += 1
+                steps.append(lower.copy())  # Snapshot after removal
         
         # Add current point
         lower.append(p)
         if step_mode:
-            steps.append({
-                "step": step_counter,
-                "hull": lower.copy(),
-                "description": f"Added point {p} to lower hull ({i+1}/{len(pts)})",
-                "active": [p],
-                "phase": "lower_hull"
-            })
-            step_counter += 1
+            steps.append(lower.copy())  # Snapshot after addition
 
-    # Obere Hülle
+    # Obere Hülle (Upper Hull)
     upper = []
-    reversed_pts = list(reversed(pts))
-    for i, p in enumerate(reversed_pts):
+    for p in reversed(pts):
         # Remove points that make right turn
         while len(upper) >= 2 and orientation(upper[-2], upper[-1], p) <= 0:
-            removed = upper.pop()
+            upper.pop()
             if step_mode:
-                steps.append({
-                    "step": step_counter,
-                    "hull": upper.copy(),
-                    "description": f"Removed point {removed} (makes right turn)",
-                    "active": [removed],
-                    "phase": "upper_hull"
-                })
-                step_counter += 1
+                steps.append(upper.copy())  # Snapshot after removal
         
         # Add current point
         upper.append(p)
         if step_mode:
-            steps.append({
-                "step": step_counter,
-                "hull": upper.copy(),
-                "description": f"Added point {p} to upper hull ({i+1}/{len(reversed_pts)})",
-                "active": [p],
-                "phase": "upper_hull"
-            })
-            step_counter += 1
+            steps.append(upper.copy())  # Snapshot after addition
 
-    # Combine lower and upper hull
+    # Combine hulls
     hull = lower[:-1] + upper[:-1]
 
     if step_mode:
-        steps.append({
-            "step": step_counter,
-            "hull": hull,
-            "description": "Combined lower and upper hull - complete!",
-            "active": [],
-            "phase": "complete"
-        })
+        steps.append(hull)  # Final complete hull
         return steps
     else:
         return hull

@@ -14,8 +14,10 @@ import random
 # Add parent directory to path to import algorithms
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# from algorithms.andrews_for_Testing import andrews_algorithm
 from algorithms.andrews import andrews_algorithm
-from algorithms.quickhull import quickhull_algorithm
+from algorithms.quickhull_for_Testing import quickhull_algorithm
+from algorithms.adapter import adapt_for_visualization
 
 app = FastAPI(title="Convex Hull Visualizer API")
 
@@ -69,11 +71,8 @@ def compute_algorithm(request: ComputeRequest):
         return {
             "total_steps": 1,
             "steps": [{
-                "step": 0,
                 "hull": request.points,
-                "description": "Less than 3 points - hull is just the points",
-                "active": request.points,
-                "phase": "complete"
+                "active": []
             }],
             "points": request.points,
             "algorithm": request.algorithm
@@ -81,9 +80,13 @@ def compute_algorithm(request: ComputeRequest):
     
     try:
         if request.algorithm == "andrews":
-            steps = andrews_algorithm(request.points, step_mode=True)
+            # Get raw steps from algorithm (List[List[Point]])
+            raw_steps = andrews_algorithm(request.points, step_mode=True)
+            # Convert to visualization format
+            viz_steps = adapt_for_visualization(raw_steps, request.points)
         elif request.algorithm == "quickhull":
-            steps = quickhull_algorithm(request.points, step_mode=True)
+            raw_steps = quickhull_algorithm(request.points, step_mode=True)
+            viz_steps = adapt_for_visualization(raw_steps, request.points)
         else:
             raise HTTPException(
                 status_code=400, 
@@ -91,8 +94,8 @@ def compute_algorithm(request: ComputeRequest):
             )
         
         return {
-            "total_steps": len(steps),
-            "steps": steps,
+            "total_steps": len(viz_steps),
+            "steps": viz_steps,
             "points": request.points,
             "algorithm": request.algorithm
         }
@@ -141,7 +144,7 @@ def list_algorithms():
                 "id": "quickhull",
                 "name": "QuickHull",
                 "description": "Divide-and-conquer approach similar to quicksort",
-                "implemented": False
+                "implemented": True
             }
         ]
     }

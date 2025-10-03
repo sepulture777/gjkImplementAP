@@ -5,7 +5,7 @@ For the web visualization, use:
     ./run.sh
     
 Or manually:
-    cd backend && python main.py
+    cd /path/to/convex_hull && uvicorn API.main:app --reload
 """
 
 from data.generator import generate_points

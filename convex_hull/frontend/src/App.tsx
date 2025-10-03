@@ -82,8 +82,9 @@ function App() {
     }
   };
 
-  // Reset to beginning
+  // Reset to beginning (clears steps but keeps points for comparison)
   const handleReset = () => {
+    setSteps([]);
     setCurrentStepIndex(0);
     setIsPlaying(false);
   };
@@ -134,11 +135,8 @@ function App() {
         {/* Header */}
         <header style={{ marginBottom: '30px' }}>
           <h1 style={{ margin: '0 0 10px 0' }}>
-            🔷 Convex Hull Visualizer
+            Convex Hull Visualizer
           </h1>
-          <p style={{ margin: 0, color: '#aaa' }}>
-            Interactive step-by-step visualization of convex hull algorithms
-          </p>
         </header>
 
         {/* Error display */}
@@ -198,6 +196,7 @@ function App() {
               currentStep={currentStep}
               onAddPoint={handleAddPoint}
               canEdit={steps.length === 0 && !isLoading}
+              isLastStep={currentStepIndex === steps.length - 1}
             />
             <div style={{ 
               marginTop: '10px', 
@@ -209,7 +208,7 @@ function App() {
             </div>
           </div>
 
-          {/* Step description */}
+          {/* Step info */}
           {currentStep && (
             <div style={{
               flex: 1,
@@ -220,28 +219,47 @@ function App() {
               border: '2px solid #444'
             }}>
               <h3 style={{ marginTop: 0 }}>Current Step</h3>
-              <div style={{ marginBottom: '15px' }}>
-                <div style={{ 
-                  display: 'inline-block',
-                  padding: '4px 12px',
-                  backgroundColor: 
-                    currentStep.phase === 'complete' ? '#22c55e' :
-                    currentStep.phase === 'lower_hull' ? '#3b82f6' :
-                    '#f59e0b',
-                  borderRadius: '4px',
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                  marginBottom: '10px'
-                }}>
-                  {currentStep.phase.toUpperCase().replace('_', ' ')}
-                </div>
+              <div style={{ 
+                display: 'inline-block',
+                padding: '4px 12px',
+                backgroundColor: currentStepIndex === steps.length - 1 ? '#22c55e' : '#3b82f6',
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                marginBottom: '15px'
+              }}>
+                {currentStepIndex === steps.length - 1 ? 'COMPLETE' : 'IN PROGRESS'}
               </div>
-              <p style={{ fontSize: '16px', lineHeight: '1.5' }}>
-                {currentStep.description}
-              </p>
               <div style={{ marginTop: '15px', fontSize: '14px', color: '#aaa' }}>
                 <div>Hull points: {currentStep.hull.length}</div>
-                <div>Active points: {currentStep.active.length}</div>
+                <div>Active/changed: {currentStep.active.length}</div>
+              </div>
+            </div>
+          )}
+
+          {/* Instructions when points exist but no steps */}
+          {!currentStep && points.length > 0 && (
+            <div style={{
+              flex: 1,
+              minWidth: '300px',
+              padding: '20px',
+              backgroundColor: '#242424',
+              borderRadius: '8px',
+              border: '2px solid #444'
+            }}>
+              <h3 style={{ marginTop: 0 }}>Ready to Run!</h3>
+              <div style={{ color: '#aaa', lineHeight: '1.6' }}>
+                <p>You have <strong style={{ color: 'white' }}>{points.length} points</strong> ready.</p>
+                <p>Select an algorithm and click <strong style={{ color: '#22c55e' }}>"Run Algorithm"</strong> to see the visualization.</p>
+                <div style={{ 
+                  marginTop: '15px', 
+                  padding: '10px', 
+                  backgroundColor: '#1a1a1a',
+                  borderRadius: '4px',
+                  fontSize: '13px'
+                }}>
+                  💡 <strong>Tip:</strong> After watching one algorithm, click "Reset" to try the other algorithm on the same points and compare!
+                </div>
               </div>
             </div>
           )}
@@ -259,9 +277,10 @@ function App() {
               <h3 style={{ marginTop: 0 }}>Getting Started</h3>
               <ol style={{ lineHeight: '1.8', color: '#aaa' }}>
                 <li>Generate random points or click the canvas to add points manually</li>
-                <li>Select an algorithm (Andrew's Monotone Chain)</li>
+                <li>Select an algorithm (Andrew's or QuickHull)</li>
                 <li>Click "Run Algorithm" to compute the convex hull</li>
                 <li>Use playback controls to step through the algorithm</li>
+                <li><strong>Compare algorithms:</strong> Click "Reset", switch algorithm, run again on same points!</li>
               </ol>
               <div style={{ 
                 marginTop: '20px', 

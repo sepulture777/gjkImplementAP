@@ -157,7 +157,7 @@ Then open: **http://localhost:5173**
 
 ### Backend
 - **andrews.py**: 128 lines (refactored with step tracking)
-- **backend/main.py**: 150 lines (FastAPI app)
+- **API/main.py**: 150 lines (FastAPI app)
 - **base.py**: 20 lines (documentation)
 - **quickhull.py**: 27 lines (placeholder)
 

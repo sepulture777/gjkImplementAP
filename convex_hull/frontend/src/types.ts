@@ -1,15 +1,13 @@
 /**
  * Type definitions for Convex Hull Visualizer
+ * Simplified - no metadata, pure visualization data
  */
 
 export type Point = [number, number];
 
 export interface AlgorithmStep {
-  step: number;
-  hull: Point[];
-  description: string;
-  active: Point[];
-  phase: string;
+  hull: Point[];      // Current hull points to draw
+  active: Point[];    // Points to highlight (what changed)
 }
 
 export interface ComputeResponse {

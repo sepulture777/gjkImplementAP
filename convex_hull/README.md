@@ -63,7 +63,7 @@ The application will be available at:
 
 ```bash
 # Terminal 1 - Backend
-uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn API.main:app --reload --host 0.0.0.0 --port 8000
 
 # Terminal 2 - Frontend
 cd frontend && npm run dev
@@ -226,7 +226,7 @@ convex_hull/
 │   ├── base.py              # Algorithm interface documentation
 │   ├── andrews.py           # Andrew's algorithm (step-by-step)
 │   └── quickhull.py         # QuickHull (placeholder)
-├── backend/
+├── API/
 │   └── main.py              # FastAPI application (3 endpoints)
 ├── data/
 │   ├── __init__.py
@@ -271,7 +271,7 @@ def algorithm_name(points: List[Point], step_mode: bool = False):
         return final_hull
 ```
 
-3. Import in `backend/main.py`
+3. Import in `API/main.py`
 4. Add to the `/api/compute` endpoint
 5. Update `/api/algorithms` endpoint
 
