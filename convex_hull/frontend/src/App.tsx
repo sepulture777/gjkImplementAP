@@ -10,6 +10,11 @@ import type { Point, AlgorithmStep, Algorithm } from './types';
 import './App.css';
 
 function App() {
+  // Canvas dimensions and margin
+  const CANVAS_WIDTH = 1000;
+  const CANVAS_HEIGHT = 700;
+  const CANVAS_MARGIN = 30;
+
   // Point management
   const [points, setPoints] = useState<Point[]>([]);
   const [pointCount, setPointCount] = useState(50);
@@ -34,10 +39,15 @@ function App() {
     try {
       const newPoints = await api.generatePoints({ 
         count: pointCount, 
-        x_max: 800, 
-        y_max: 600 
+        x_max: CANVAS_WIDTH - 2 * CANVAS_MARGIN,
+        y_max: CANVAS_HEIGHT - 2 * CANVAS_MARGIN
       });
-      setPoints(newPoints);
+      // Offset points by margin to keep them within bounds
+      const offsetPoints = newPoints.map(([x, y]) => [
+        x + CANVAS_MARGIN, 
+        y + CANVAS_MARGIN
+      ] as Point);
+      setPoints(offsetPoints);
       setSteps([]);
       setCurrentStepIndex(0);
     } catch (err) {
@@ -197,6 +207,9 @@ function App() {
               onAddPoint={handleAddPoint}
               canEdit={steps.length === 0 && !isLoading}
               isLastStep={currentStepIndex === steps.length - 1}
+              width={CANVAS_WIDTH}
+              height={CANVAS_HEIGHT}
+              margin={CANVAS_MARGIN}
             />
             <div style={{ 
               marginTop: '10px', 
@@ -259,43 +272,6 @@ function App() {
                   fontSize: '13px'
                 }}>
                   💡 <strong>Tip:</strong> After watching one algorithm, click "Reset" to try the other algorithm on the same points and compare!
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Initial instructions */}
-          {!currentStep && points.length === 0 && (
-            <div style={{
-              flex: 1,
-              minWidth: '300px',
-              padding: '20px',
-              backgroundColor: '#242424',
-              borderRadius: '8px',
-              border: '2px solid #444'
-            }}>
-              <h3 style={{ marginTop: 0 }}>Getting Started</h3>
-              <ol style={{ lineHeight: '1.8', color: '#aaa' }}>
-                <li>Generate random points or click the canvas to add points manually</li>
-                <li>Select an algorithm (Andrew's or QuickHull)</li>
-                <li>Click "Run Algorithm" to compute the convex hull</li>
-                <li>Use playback controls to step through the algorithm</li>
-                <li><strong>Compare algorithms:</strong> Click "Reset", switch algorithm, run again on same points!</li>
-              </ol>
-              <div style={{ 
-                marginTop: '20px', 
-                padding: '10px', 
-                backgroundColor: '#1a1a1a',
-                borderRadius: '4px',
-                fontSize: '13px'
-              }}>
-                <strong>Legend:</strong>
-                <div style={{ marginTop: '8px' }}>
-                  <div>🔵 Gray dots = All points</div>
-                  <div>🟢 Green dots = Hull points</div>
-                  <div>🟡 Yellow dots = Active points</div>
-                  <div>🔴 Red line = Hull in progress</div>
-                  <div>🟢 Green line = Complete hull</div>
                 </div>
               </div>
             </div>

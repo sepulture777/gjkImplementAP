@@ -136,7 +136,7 @@ def list_algorithms():
         "algorithms": [
             {
                 "id": "andrews",
-                "name": "Andrew's Monotone Chain",
+                "name": "Andrews",
                 "description": "Sorts points and builds lower/upper hull separately",
                 "implemented": True
             },

@@ -13,6 +13,7 @@ interface CanvasProps {
   isLastStep?: boolean;  // To know if we should draw complete hull
   width?: number;
   height?: number;
+  margin?: number;  // Margin to keep points away from edges
 }
 
 export function Canvas({ 
@@ -21,8 +22,9 @@ export function Canvas({
   onAddPoint, 
   canEdit,
   isLastStep = false,
-  width = 800,
-  height = 600
+  width = 1000,
+  height = 700,
+  margin = 30
 }: CanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -34,8 +36,12 @@ export function Canvas({
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+
+    // Constrain to margin bounds
+    x = Math.max(margin, Math.min(width - margin, x));
+    y = Math.max(margin, Math.min(height - margin, y));
 
     onAddPoint([Math.round(x), Math.round(y)]);
   };
@@ -52,21 +58,30 @@ export function Canvas({
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(0, 0, width, height);
 
-    // Draw grid (optional, subtle)
+    // Draw grid (optional, subtle) - only inside the margin area
     ctx.strokeStyle = '#2a2a2a';
     ctx.lineWidth = 1;
-    for (let i = 0; i < width; i += 50) {
+    
+    // Vertical grid lines (start from first line after margin)
+    for (let i = Math.ceil(margin / 50) * 50; i < width - margin; i += 50) {
       ctx.beginPath();
-      ctx.moveTo(i, 0);
-      ctx.lineTo(i, height);
+      ctx.moveTo(i, margin);
+      ctx.lineTo(i, height - margin);
       ctx.stroke();
     }
-    for (let i = 0; i < height; i += 50) {
+    
+    // Horizontal grid lines (start from first line after margin)
+    for (let i = Math.ceil(margin / 50) * 50; i < height - margin; i += 50) {
       ctx.beginPath();
-      ctx.moveTo(0, i);
-      ctx.lineTo(width, i);
+      ctx.moveTo(margin, i);
+      ctx.lineTo(width - margin, i);
       ctx.stroke();
     }
+
+    // Draw margin bounds (slightly more visible border)
+    ctx.strokeStyle = '#3a3a3a';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(margin, margin, width - 2 * margin, height - 2 * margin);
 
     // Draw all points (gray)
     points.forEach(([x, y]) => {
@@ -124,7 +139,7 @@ export function Canvas({
         ctx.stroke();
       });
     }
-  }, [points, currentStep, isLastStep, width, height]);
+  }, [points, currentStep, isLastStep, width, height, margin]);
 
   return (
     <div style={{ border: '2px solid #444', borderRadius: '8px', display: 'inline-block' }}>

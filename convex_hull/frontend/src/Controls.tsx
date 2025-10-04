@@ -111,7 +111,7 @@ export function Controls({
               opacity: hasSteps ? 0.5 : 1
             }}
           >
-            <option value="andrews">Andrew's Monotone Chain</option>
+            <option value="andrews">Andrews</option>
             <option value="quickhull">QuickHull</option>
           </select>
           <button 
