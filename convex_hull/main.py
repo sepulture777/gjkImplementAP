@@ -1,6 +1,6 @@
 from data.generator import generate_points
 from algorithms.andrews import andrews_algorithm
-from algorithms.quick import printHull
+from algorithms.quick import quickhull_algorithm
 
 def main():
     
@@ -21,7 +21,6 @@ def main():
     
     
     # Quick Hull Algorithmus
-    printHull(points, len(points))
-
+    quickhull_algorithm(points, step_mode=True, verbose=False)
 if __name__ == "__main__":
     main()
