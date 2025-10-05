@@ -10,7 +10,8 @@ Or manually:
 
 from data.generator import generate_points
 from algorithms.andrews import andrews_algorithm
-
+from scipy.spatial import ConvexHull
+import numpy as np
 
 def main():
     print("=" * 60)
@@ -38,12 +39,31 @@ def main():
     print("🔹 Running Andrews algorithm (step-by-step)...")
     steps = andrews_algorithm(points, step_mode=True)
     print(f"✓ {len(steps)} Schritte:")
-    for step in steps:
-        print(f"  Step {step['step']}: {step['description']}")
-        print(f"    Hull: {step['hull'][:3]}{'...' if len(step['hull']) > 3 else ''}")
-        print(f"    Active: {step['active']}")
-        print(f"    Phase: {step['phase']}")
-        print()
+    for i, step in enumerate(steps):
+        print(f"  Step {i + 1}: {step[:5]}{'...' if len(step) > 5 else ''}")
+
+    # Comparison with scipit andrews implementation
+    try:
+        print("🔹 Running SciPy ConvexHull for comparison...")
+        np_points = np.array(points)
+        hull_scipy = ConvexHull(np_points)
+        hull_points = [tuple(np_points[vertex]) for vertex in hull_scipy.vertices]
+
+        print(f"✓ SciPy Huelle ({len(hull_points)} Punkte):")
+        for p in hull_points:
+            print(f"  {p}")
+            print()
+
+        if set(hull) == set(hull_points):
+            print("✓ Die Hüllen stimmen überein!")
+        else:
+            print("✗ Die Hüllen stimmen NICHT überein!")
+    except ImportError:
+        print("⚠️ SciPy ist nicht installiert. Überspringe Vergleich.")
+    print()
+    print("Test abgeschlossen.")
+
+
 
 
 if __name__ == "__main__":
