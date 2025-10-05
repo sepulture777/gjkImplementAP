@@ -3,13 +3,16 @@ FastAPI backend for Convex Hull Visualizer.
 Simple, single-user, local-only API.
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Tuple
 import sys
 import os
 import random
+import time
+import csv
 
 # Add parent directory to path to import algorithms
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -80,24 +83,33 @@ def compute_algorithm(request: ComputeRequest):
     
     try:
         if request.algorithm == "andrews":
+
             # Get raw steps from algorithm (List[List[Point]])
+            start_time = time.perf_counter()
             raw_steps = andrews_algorithm(request.points, step_mode=True)
+            end_time = time.perf_counter()
             # Convert to visualization format
+
             viz_steps = adapt_for_visualization(raw_steps, request.points)
         elif request.algorithm == "quickhull":
+            start_time = time.perf_counter()
             raw_steps = quickhull_algorithm(request.points, step_mode=True)
+            end_time = time.perf_counter()
             viz_steps = adapt_for_visualization(raw_steps, request.points)
         else:
             raise HTTPException(
                 status_code=400, 
                 detail=f"Unknown algorithm: {request.algorithm}. Available: andrews, quickhull"
             )
-        
+
+        computation_time = end_time - start_time
+
         return {
             "total_steps": len(viz_steps),
             "steps": viz_steps,
             "points": request.points,
-            "algorithm": request.algorithm
+            "algorithm": request.algorithm,
+            "computation_time_seconds": computation_time
         }
     
     except NotImplementedError as e:
@@ -148,6 +160,81 @@ def list_algorithms():
             }
         ]
     }
+
+
+@app.post("/upload/")
+async def upload_file(
+    file: UploadFile = File(...),
+    algorithm: str = Form("andrews")
+):
+    """
+    Lädt eine Punktdatei hoch und berechnet den Convex Hull.
+    Datei-Format:
+        Zeile 1: n
+        Zeilen 2..n+1: x,y
+    """
+    try:
+        # Datei lesen
+        content = await file.read()
+        text = content.decode("utf-8").strip()
+        lines = text.splitlines()
+        n = int(lines[0].strip())
+
+        # Punkte parsen
+        points: List[Point] = []
+        for line in lines[1:]:
+            if not line.strip():
+                continue
+            x_str, y_str = line.strip().split(",")
+            points.append((float(x_str), float(y_str)))
+
+        if len(points) != n:
+            return JSONResponse(
+                status_code=400,
+                content={"error": f"Expected {n} points, but got {len(points)}."}
+            )
+
+        # Timer starten
+        start_time = time.perf_counter()
+
+        # Algorithmus ausführen
+        if algorithm.lower() == "andrews":
+            hull = andrews_algorithm(points)
+        elif algorithm.lower() == "quickhull":
+            hull = quickhull_algorithm(points)
+        else:
+            return JSONResponse(
+                status_code=400,
+                content={"error": f"Unknown algorithm: {algorithm}"}
+            )
+
+        duration = time.perf_counter() - start_time
+
+        os.makedirs("logs", exist_ok=True)
+        csv_path = os.path.join("logs", "results.csv")
+
+        with open(csv_path, mode="a", newline="") as csvfile:
+            writer = csv.writer(csvfile)
+            # Kopfzeile einmalig schreiben, falls Datei neu ist
+            if csvfile.tell() == 0:
+                writer.writerow(["dataset","timestamp", "algorithm", "points", "runtime_seconds"])
+            writer.writerow([
+                file.filename,
+                time.strftime("%Y-%m-%d %H:%M:%S"),
+                algorithm,
+                len(points),
+                duration
+            ])
+
+        return {
+            "algorithm": algorithm,
+            "input_points": len(points),
+            "hull_points": hull,
+            "runtime_seconds": round(duration, 6)
+        }
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 
 if __name__ == "__main__":
