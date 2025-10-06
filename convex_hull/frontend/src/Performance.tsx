@@ -103,7 +103,8 @@ export function Performance() {
         }}>
           <strong style={{ color: '#f59e0b' }}>File Format:</strong>
           <pre style={{ margin: '5px 0 0 0', color: '#aaa' }}>
-            {`Line 1: n (number of points)
+            {`  
+            Line 1: n (number of points)
             Lines 2..n+1: x,y (coordinates)
 
             Example:
