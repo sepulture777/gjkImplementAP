@@ -33,6 +33,18 @@ interface ControlsProps {
   setSpeed: (speed: number) => void;
 }
 
+// Speed presets for slider (0-8 positions)
+const SPEED_PRESETS = [0.5, 1, 2, 3, 5, 10, 20, 50, 100];
+
+function speedToIndex(speed: number): number {
+  const index = SPEED_PRESETS.indexOf(speed);
+  return index >= 0 ? index : 1; // Default to 1x if not found
+}
+
+function indexToSpeed(index: number): number {
+  return SPEED_PRESETS[index] || 1;
+}
+
 export function Controls({
   onGenerate,
   onClear,
@@ -175,19 +187,43 @@ export function Controls({
           </div>
 
           {/* Speed control */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <label htmlFor="speed" style={{ color: '#aaa' }}>Speed:</label>
-            <input
-              id="speed"
-              type="range"
-              min="0.5"
-              max="3"
-              step="0.5"
-              value={speed}
-              onChange={(e) => setSpeed(parseFloat(e.target.value))}
-              style={{ flex: 1, maxWidth: '200px' }}
-            />
-            <span style={{ color: '#aaa', minWidth: '40px' }}>{speed}x</span>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <label htmlFor="speed" style={{ color: '#aaa' }}>Speed:</label>
+              <input
+                id="speed"
+                type="range"
+                min="0"
+                max="8"
+                step="1"
+                value={speedToIndex(speed)}
+                onChange={(e) => setSpeed(indexToSpeed(parseInt(e.target.value)))}
+                style={{ flex: 1, maxWidth: '300px' }}
+              />
+              <span style={{ color: '#aaa', minWidth: '60px', fontWeight: 'bold' }}>
+                {speed}x
+              </span>
+            </div>
+            {/* Speed tick labels */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between',
+              maxWidth: '300px',
+              marginLeft: '70px',
+              marginTop: '5px',
+              fontSize: '11px',
+              color: '#666'
+            }}>
+              <span>0.5×</span>
+              <span>1×</span>
+              <span>2×</span>
+              <span>3×</span>
+              <span>5×</span>
+              <span>10×</span>
+              <span>20×</span>
+              <span>50×</span>
+              <span>100×</span>
+            </div>
           </div>
         </div>
       )}

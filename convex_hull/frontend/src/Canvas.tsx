@@ -39,6 +39,9 @@ export function Canvas({
     let x = e.clientX - rect.left;
     let y = e.clientY - rect.top;
 
+    // Flip Y coordinate to match mathematical convention (Y=0 at bottom)
+    y = height - y;
+
     // Constrain to margin bounds
     x = Math.max(margin, Math.min(width - margin, x));
     y = Math.max(margin, Math.min(height - margin, y));
@@ -87,7 +90,8 @@ export function Canvas({
     points.forEach(([x, y]) => {
       ctx.fillStyle = '#666';
       ctx.beginPath();
-      ctx.arc(x, y, 4, 0, 2 * Math.PI);
+      // Flip Y coordinate for rendering
+      ctx.arc(x, height - y, 4, 0, 2 * Math.PI);
       ctx.fill();
     });
 
@@ -98,13 +102,14 @@ export function Canvas({
         ctx.strokeStyle = isLastStep ? '#22c55e' : '#ef4444';
         ctx.lineWidth = isLastStep ? 3 : 2;
         ctx.beginPath();
-        ctx.moveTo(currentStep.hull[0][0], currentStep.hull[0][1]);
+        // Flip Y coordinates for rendering
+        ctx.moveTo(currentStep.hull[0][0], height - currentStep.hull[0][1]);
         for (let i = 1; i < currentStep.hull.length; i++) {
-          ctx.lineTo(currentStep.hull[i][0], currentStep.hull[i][1]);
+          ctx.lineTo(currentStep.hull[i][0], height - currentStep.hull[i][1]);
         }
         // Close the hull if complete (last step)
         if (isLastStep) {
-          ctx.lineTo(currentStep.hull[0][0], currentStep.hull[0][1]);
+          ctx.lineTo(currentStep.hull[0][0], height - currentStep.hull[0][1]);
           
           // Fill with semi-transparent green
           ctx.fillStyle = 'rgba(34, 197, 94, 0.1)';
@@ -117,7 +122,8 @@ export function Canvas({
       currentStep.hull.forEach(([x, y]) => {
         ctx.fillStyle = '#22c55e';
         ctx.beginPath();
-        ctx.arc(x, y, 5, 0, 2 * Math.PI);
+        // Flip Y coordinate for rendering
+        ctx.arc(x, height - y, 5, 0, 2 * Math.PI);
         ctx.fill();
         
         // Add black outline
@@ -130,7 +136,8 @@ export function Canvas({
       currentStep.active.forEach(([x, y]) => {
         ctx.fillStyle = '#f59e0b';
         ctx.beginPath();
-        ctx.arc(x, y, 8, 0, 2 * Math.PI);
+        // Flip Y coordinate for rendering
+        ctx.arc(x, height - y, 8, 0, 2 * Math.PI);
         ctx.fill();
         
         // Add black outline
