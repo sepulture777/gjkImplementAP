@@ -29,3 +29,12 @@ export interface GeneratePointsResponse {
 
 export type Algorithm = 'andrews' | 'quickhull';
 
+export interface PerformanceTestResult {
+  algorithm: string;
+  input_points: number;
+  hull_points: Point[];
+  runtime_seconds: number;
+}
+
+export type AppMode = 'visualization' | 'performance';
+

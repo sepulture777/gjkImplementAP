@@ -5,11 +5,14 @@
 import { useState, useEffect } from 'react';
 import { Canvas } from './Canvas';
 import { Controls } from './Controls';
+import { Performance } from './Performance';
 import { api } from './api';
-import type { Point, AlgorithmStep, Algorithm } from './types';
+import type { Point, AlgorithmStep, Algorithm, AppMode } from './types';
 import './App.css';
 
 function App() {
+  // App mode
+  const [mode, setMode] = useState<AppMode>('visualization');
   // Canvas dimensions and margin
   const CANVAS_WIDTH = 1000;
   const CANVAS_HEIGHT = 700;
@@ -144,9 +147,45 @@ function App() {
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Header */}
         <header style={{ marginBottom: '30px' }}>
-          <h1 style={{ margin: '0 0 10px 0' }}>
-            Convex Hull Visualizer
+          <h1 style={{ margin: '0 0 15px 0' }}>
+            Convex Hull
           </h1>
+          
+          {/* Mode tabs */}
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => setMode('visualization')}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: mode === 'visualization' ? '#535bf2' : '#2a2a2a',
+                color: 'white',
+                border: mode === 'visualization' ? '2px solid #535bf2' : '2px solid #444',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: mode === 'visualization' ? 'bold' : 'normal',
+                transition: 'all 0.2s'
+              }}
+            >
+              Visualizer
+            </button>
+            <button
+              onClick={() => setMode('performance')}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: mode === 'performance' ? '#535bf2' : '#2a2a2a',
+                color: 'white',
+                border: mode === 'performance' ? '2px solid #535bf2' : '2px solid #444',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: mode === 'performance' ? 'bold' : 'normal',
+                transition: 'all 0.2s'
+              }}
+            >
+              Performance Testing
+            </button>
+          </div>
         </header>
 
         {/* Error display */}
@@ -163,7 +202,7 @@ function App() {
         )}
 
         {/* Loading indicator */}
-        {isLoading && (
+        {mode === 'visualization' && isLoading && (
           <div style={{
             padding: '12px',
             backgroundColor: '#535bf2',
@@ -175,8 +214,11 @@ function App() {
           </div>
         )}
 
-        {/* Controls */}
-        <Controls
+        {/* Visualization Mode */}
+        {mode === 'visualization' && (
+          <>
+            {/* Controls */}
+            <Controls
           onGenerate={handleGenerate}
           onClear={handleClear}
           pointCount={pointCount}
@@ -276,7 +318,14 @@ function App() {
               </div>
             </div>
           )}
-        </div>
+            </div>
+          </>
+        )}
+
+        {/* Performance Mode */}
+        {mode === 'performance' && (
+          <Performance />
+        )}
 
         {/* Footer */}
         <footer style={{ 
