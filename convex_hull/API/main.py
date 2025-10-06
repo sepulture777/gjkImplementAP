@@ -19,7 +19,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # from algorithms.andrews_for_Testing import andrews_algorithm
 from algorithms.andrews import andrews_algorithm
-from algorithms.quickhull_for_Testing import quickhull_algorithm
+# from algorithms.quickhull_for_Testing import quickhull_algorithm
+from algorithms.quickhull import quickhull_algorithm
 from algorithms.adapter import adapt_for_visualization
 
 app = FastAPI(title="Convex Hull Visualizer API")
