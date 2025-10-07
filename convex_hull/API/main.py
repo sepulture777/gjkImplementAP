@@ -13,6 +13,7 @@ import os
 import random
 import time
 import csv
+import json
 
 # Add parent directory to path to import algorithms
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -96,7 +97,17 @@ def compute_algorithm(request: ComputeRequest):
             start_time = time.perf_counter()
             raw_steps = quickhull_algorithm(request.points, step_mode=True)
             end_time = time.perf_counter()
+            print("\n" + "="*80)
+            print("RAW STEPS:")
+            print("="*80)
+            print(json.dumps(raw_steps, indent=2))
+            print("="*80 + "\n")
             viz_steps = adapt_for_visualization(raw_steps, request.points)
+            print("\n" + "="*80)
+            print("VISUALIZATION STEPS:")
+            print("="*80)
+            print(json.dumps(viz_steps, indent=2))
+            print("="*80 + "\n")
         else:
             raise HTTPException(
                 status_code=400, 
