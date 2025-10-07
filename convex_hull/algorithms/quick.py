@@ -131,6 +131,13 @@ def quickhull_algorithm(points, step_mode: bool = False, verbose: bool = False):
 
     steps = [] if step_mode else None
 
+    # Ensure endpoints are present in the internal hull from the start
+    hull.add("$".join(map(str, points[min_x])))
+    hull.add("$".join(map(str, points[max_x])))
+    if steps is not None:
+        # record initial snapshot containing the two endpoints
+        steps.append(_current_hull_points())
+
     # Call the original recursive routine and collect steps if requested
     quickHull(points, n, points[min_x], points[max_x], 1, steps)
     quickHull(points, n, points[min_x], points[max_x], -1, steps)
