@@ -13,23 +13,8 @@ def _str_to_point(s: str):
 
 
 def _current_hull_points():
-    """Return current hull as list[Point], sorted counterclockwise by angle from centroid."""
-    points = [_str_to_point(s) for s in hull]
-    
-    # If less than 3 points, no need to sort
-    if len(points) < 3:
-        return points
-    
-    # Calculate centroid
-    cx = sum(p[0] for p in points) / len(points)
-    cy = sum(p[1] for p in points) / len(points)
-    
-    # Sort by angle from centroid (counterclockwise)
-    import math
-    def angle_from_centroid(p):
-        return math.atan2(p[1] - cy, p[0] - cx)
-    
-    return sorted(points, key=angle_from_centroid)
+    """Return current hull as list[Point]. Order is arbitrary (set backed)."""
+    return [_str_to_point(s) for s in hull]
 
 # Returns the side of point p with respect to line
 # joining points p1 and p2.
@@ -61,11 +46,10 @@ def quickHull(a, n, p1, p2, side, steps=None):
     for i in range(n):
         temp = lineDist(p1, p2, a[i])
 
-        # AUSKOMMENTIERT: Dies erstellt zu viele Schritte (jeder Punkt wird gemessen)
         # If caller requested steps, record that we're measuring this point
-        # if steps is not None:
-        #     # snapshot: current hull points plus the measured point at the end
-        #     steps.append(_current_hull_points() + [a[i]])
+        if steps is not None:
+            # snapshot: current hull points plus the measured point at the end
+            steps.append(_current_hull_points() + [a[i]])
 
         if (findSide(p1, p2, a[i]) == side) and (temp > max_dist):
             ind = i
