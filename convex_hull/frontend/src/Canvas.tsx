@@ -96,6 +96,57 @@ export function Canvas({
     });
 
     if (currentStep) {
+      // QuickHull-specific visualization
+      if (currentStep.dividing_line && currentStep.test_points) {
+        // Draw dividing line (purple/magenta)
+        const [p1, p2] = currentStep.dividing_line;
+        ctx.strokeStyle = '#a855f7'; // Purple
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(p1[0], height - p1[1]);
+        ctx.lineTo(p2[0], height - p2[1]);
+        ctx.stroke();
+
+        // Draw perpendicular distance lines from test points to dividing line
+        currentStep.test_points.forEach((p) => {
+          // Calculate perpendicular foot on the line
+          const [px, py] = p;
+          const [x1, y1] = p1;
+          const [x2, y2] = p2;
+          
+          const dx = x2 - x1;
+          const dy = y2 - y1;
+          const lenSq = dx * dx + dy * dy;
+          
+          if (lenSq > 0) {
+            const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / lenSq));
+            const footX = x1 + t * dx;
+            const footY = y1 + t * dy;
+            
+            // Draw perpendicular line
+            ctx.strokeStyle = '#a855f7';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]); // Dashed line
+            ctx.beginPath();
+            ctx.moveTo(px, height - py);
+            ctx.lineTo(footX, height - footY);
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset to solid
+          }
+        });
+
+        // Draw test points (yellow)
+        currentStep.test_points.forEach(([x, y]) => {
+          ctx.fillStyle = '#f59e0b';
+          ctx.beginPath();
+          ctx.arc(x, height - y, 6, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.strokeStyle = '#000';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        });
+      }
+
       // Draw hull lines
       if (currentStep.hull.length > 1) {
         // Green if last step (complete), red if in progress
@@ -132,19 +183,21 @@ export function Canvas({
         ctx.stroke();
       });
 
-      // Draw active points (yellow, larger)
-      currentStep.active.forEach(([x, y]) => {
-        ctx.fillStyle = '#f59e0b';
-        ctx.beginPath();
-        // Flip Y coordinate for rendering
-        ctx.arc(x, height - y, 8, 0, 2 * Math.PI);
-        ctx.fill();
-        
-        // Add black outline
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      });
+      // Draw active points (yellow, larger) - only if not QuickHull test points
+      if (!currentStep.test_points) {
+        currentStep.active.forEach(([x, y]) => {
+          ctx.fillStyle = '#f59e0b';
+          ctx.beginPath();
+          // Flip Y coordinate for rendering
+          ctx.arc(x, height - y, 8, 0, 2 * Math.PI);
+          ctx.fill();
+          
+          // Add black outline
+          ctx.strokeStyle = '#000';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        });
+      }
     }
   }, [points, currentStep, isLastStep, width, height, margin]);
 

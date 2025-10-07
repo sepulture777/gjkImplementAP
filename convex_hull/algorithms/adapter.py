@@ -48,24 +48,27 @@ def detect_active_points(current_hull: List[Point], previous_hull: List[Point]) 
     return active
 
 
-def adapt_for_visualization(raw_steps: List[List[Point]], all_points: List[Point]) -> List[Dict[str, Any]]:
+def adapt_for_visualization(raw_steps: List[Any], all_points: List[Point], algorithm: str = "andrews") -> List[Dict[str, Any]]:
     """
-    Converts simple hull snapshots to visualization format.
+    Converts algorithm output to visualization format.
     
-    This is OUR job - we add the "active" points for highlighting.
-    The algorithm just gives us hull snapshots.
+    Handles two formats:
+    - Andrews: Simple list of hull snapshots [[(x,y), ...], ...]
+    - QuickHull: Rich dict format with metadata [{'hull': [...], 'dividing_line': [...], ...}, ...]
     
     Args:
-        raw_steps: List of hull states from algorithm
-                   e.g., [[(0,0)], [(0,0),(1,1)], [(0,0),(1,1),(2,2)], ...]
+        raw_steps: List of hull states from algorithm (format depends on algorithm)
         all_points: All input points (for reference - currently unused)
+        algorithm: Algorithm name ("andrews" or "quickhull")
     
     Returns:
         List of visualization steps with format:
         [
             {
-                "hull": [(x,y), ...],      # Current hull points
-                "active": [(x,y), ...],    # Points to highlight (what changed)
+                "hull": [(x,y), ...],           # Current hull points
+                "active": [(x,y), ...],         # Points to highlight
+                "dividing_line": [p1, p2],      # QuickHull only: line being subdivided
+                "test_points": [(x,y), ...],    # QuickHull only: points being tested
             },
             ...
         ]
@@ -73,6 +76,19 @@ def adapt_for_visualization(raw_steps: List[List[Point]], all_points: List[Point
     if not raw_steps:
         return []
     
+    # QuickHull already provides dict format with metadata
+    if algorithm == "quickhull":
+        # Steps are already dicts, just ensure they have all fields
+        viz_steps = []
+        for step in raw_steps:
+            if isinstance(step, dict):
+                viz_steps.append(step)
+            else:
+                # Fallback: convert to dict if needed
+                viz_steps.append({"hull": step, "active": []})
+        return viz_steps
+    
+    # Andrews uses simple list format - convert to dict format
     viz_steps = []
     previous_hull = []
     

@@ -32,12 +32,17 @@ def quickHull(a: List[Point], n: int, p1: Point, p2: Point, side: int, steps: Op
     ind = -1
     max_dist = 0.0
 
+    # Record step showing the line being subdivided and points being tested
+    if steps is not None and n > 0:
+        steps.append({
+            'hull': hull.copy(),
+            'active': [],
+            'dividing_line': [p1, p2],
+            'test_points': [a[i] for i in range(n) if findSide(p1, p2, a[i]) == side]
+        })
+
     for i in range(n):
         temp = lineDist(p1, p2, a[i])
-
-        # record measurement snapshot (current ordered hull + candidate)
-        if steps is not None:
-            steps.append(hull.copy() + [a[i]])
 
         if (findSide(p1, p2, a[i]) == side) and (temp > max_dist):
             ind = i
@@ -50,7 +55,7 @@ def quickHull(a: List[Point], n: int, p1: Point, p2: Point, side: int, steps: Op
         if p2 not in hull:
             hull.append(p2)
         if steps is not None:
-            steps.append(hull.copy())
+            steps.append({'hull': hull.copy(), 'active': []})
         return
 
     # Found farthest point
@@ -61,12 +66,12 @@ def quickHull(a: List[Point], n: int, p1: Point, p2: Point, side: int, steps: Op
         idx = hull.index(p2)
         hull.insert(idx, farthest)
         if steps is not None:
-            steps.append(hull.copy())
+            steps.append({'hull': hull.copy(), 'active': [farthest]})
     except ValueError:
         # If p2 not present, append to hull
         hull.append(farthest)
         if steps is not None:
-            steps.append(hull.copy())
+            steps.append({'hull': hull.copy(), 'active': [farthest]})
 
     # Partition remaining points into two sets
     left_set: List[Point] = []
@@ -139,7 +144,7 @@ def quickhull_algorithm(points: List[Point], step_mode: bool = False, verbose: b
     # initialize ordered hull with endpoints
     hull = [points[min_x], points[max_x]]
     if steps is not None:
-        steps.append(hull.copy())
+        steps.append({'hull': hull.copy(), 'active': hull.copy()})
 
     # partition
     upper_points: List[Point] = []
@@ -167,7 +172,7 @@ def quickhull_algorithm(points: List[Point], step_mode: bool = False, verbose: b
         hull = sorted(hull, key=angle)
 
     if step_mode:
-        steps.append(hull.copy())
+        steps.append({'hull': hull.copy(), 'active': []})
         if verbose:
             try:
                 import pprint

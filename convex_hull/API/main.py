@@ -92,22 +92,22 @@ def compute_algorithm(request: ComputeRequest):
             end_time = time.perf_counter()
             # Convert to visualization format
 
-            viz_steps = adapt_for_visualization(raw_steps, request.points)
+            viz_steps = adapt_for_visualization(raw_steps, request.points, algorithm="andrews")
         elif request.algorithm == "quickhull":
             start_time = time.perf_counter()
             raw_steps = quickhull_algorithm(request.points, step_mode=True)
             end_time = time.perf_counter()
-            print("\n" + "="*80)
-            print("RAW STEPS:")
-            print("="*80)
-            print(json.dumps(raw_steps, indent=2))
-            print("="*80 + "\n")
-            viz_steps = adapt_for_visualization(raw_steps, request.points)
-            print("\n" + "="*80)
-            print("VISUALIZATION STEPS:")
-            print("="*80)
-            print(json.dumps(viz_steps, indent=2))
-            print("="*80 + "\n")
+            # print("\n" + "=================")
+            # print("RAW STEPS:")
+            # print("=================")
+            # print(json.dumps(raw_steps, indent=2))
+            # print("=================" + "\n")
+            viz_steps = adapt_for_visualization(raw_steps, request.points, algorithm="quickhull")
+            # print("\n" + "=================")
+            # print("VISUALIZATION STEPS:")
+            # print("=================")
+            # print(json.dumps(viz_steps, indent=2))
+            # print("=================" + "\n")
         else:
             raise HTTPException(
                 status_code=400, 
