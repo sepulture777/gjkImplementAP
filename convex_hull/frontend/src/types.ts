@@ -8,7 +8,7 @@ export type Point = [number, number];
 export interface AlgorithmStep {
   hull: Point[];      // Current hull points to draw
   active: Point[];    // Points to highlight (what changed)
-  // QuickHull-specific metadata
+  // only used on QuickHull
   dividing_line?: [Point, Point];  // Line segment being subdivided
   test_points?: Point[];           // Points being tested for distance
 }

@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-Point = Tuple[float, float]
+from .models import Point
 
 def orientation(p: Point, q: Point, r: Point) -> float:
     """Kreuzprodukt: >0 = links, <0 = rechts, 0 = kollinear"""

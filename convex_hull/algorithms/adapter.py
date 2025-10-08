@@ -19,8 +19,7 @@ WHAT WE DON'T DO:
 """
 
 from typing import List, Tuple, Dict, Any
-
-Point = Tuple[float, float]
+from .models import Point
 
 
 def detect_active_points(current_hull: List[Point], previous_hull: List[Point]) -> List[Point]:

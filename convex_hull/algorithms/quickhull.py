@@ -8,7 +8,7 @@ step snapshots (ordered lists) compatible with the visualizer.
 
 from typing import List, Tuple, Optional, Any
 
-Point = Tuple[float, float]
+from .models import Point
 
 # Ordered hull stored as a list of Points
 hull: List[Point] = []
