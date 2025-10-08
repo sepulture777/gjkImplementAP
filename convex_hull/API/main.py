@@ -154,6 +154,30 @@ def generate_points(request: GeneratePointsRequest, seed: int = None):
     
     return {"points": points}
 
+@app.get("/api/generate-points-performance")
+def generate_points_performance(count: int = 1000, seed: int = None):
+    """
+    Generate a large number of random points for performance testing.
+    This endpoint is not meant for visualization.
+    """
+    if count < 1:
+        raise HTTPException(status_code=400, detail="Count should be at least 1")
+
+    if seed is not None:
+        random.seed(seed)
+
+    points = [
+        (
+            random.uniform(0, 10000),
+            random.uniform(0, 10000)
+        )
+        for _ in range(count)
+    ]
+
+
+    return {
+        "points": points
+    }
 
 @app.get("/api/algorithms")
 def list_algorithms():
