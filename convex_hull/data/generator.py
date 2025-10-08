@@ -2,7 +2,7 @@ import random
 import os
 import time
 
-def generate_points(n: int, x_range=(0, 100), y_range=(0, 100)):
+def generate_points(n: int, x_range=(0, 100), y_range=(0, 100), seed: int = None):
     """
     Erzeugt n zufällige 2D-Punkte
 
@@ -14,6 +14,9 @@ def generate_points(n: int, x_range=(0, 100), y_range=(0, 100)):
     Returns:
         list[tuple[float, float]]: Liste mit (x, y)-Punkten
     """
+    if seed is not None:
+        random.seed(seed)
+
     points = [
         (random.uniform(*x_range), random.uniform(*y_range))
         for _ in range(n)
