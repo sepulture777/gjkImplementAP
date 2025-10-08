@@ -112,7 +112,7 @@ def quickHull(a: List[Point], n: int, p1: Point, p2: Point, side: int, steps: Op
             right_set.append(p)
 
     # Recurse on the two parts
-    quickHull(left_set, len(left_set), p1, farthest, steps=steps)
+    quickHull(left_set, len(left_set), p1, farthest, side, steps=steps)
     quickHull(right_set, len(right_set), farthest, p2, steps=steps)
 
 
