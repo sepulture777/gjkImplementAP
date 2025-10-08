@@ -4,6 +4,7 @@
 
 import { useEffect, useRef } from 'react';
 import type { Point, AlgorithmStep } from './types';
+import { colors } from './theme';
 
 interface CanvasProps {
   points: Point[];
@@ -58,11 +59,11 @@ export function Canvas({
     if (!ctx) return;
 
     // Clear canvas
-    ctx.fillStyle = '#1a1a1a';
+    ctx.fillStyle = colors.background.secondary;
     ctx.fillRect(0, 0, width, height);
 
     // Draw grid (optional, subtle) - only inside the margin area
-    ctx.strokeStyle = '#2a2a2a';
+    ctx.strokeStyle = colors.background.primary;
     ctx.lineWidth = 1;
     
     // Vertical grid lines (start from first line after margin)
@@ -82,13 +83,13 @@ export function Canvas({
     }
 
     // Draw margin bounds (slightly more visible border)
-    ctx.strokeStyle = '#3a3a3a';
+    ctx.strokeStyle = colors.border.primary;
     ctx.lineWidth = 2;
     ctx.strokeRect(margin, margin, width - 2 * margin, height - 2 * margin);
 
     // Draw all points (gray)
     points.forEach(([x, y]) => {
-      ctx.fillStyle = '#666';
+      ctx.fillStyle = colors.text.quaternary;
       ctx.beginPath();
       // Flip Y coordinate for rendering
       ctx.arc(x, height - y, 4, 0, 2 * Math.PI);
@@ -100,7 +101,7 @@ export function Canvas({
       if (currentStep.dividing_line && currentStep.test_points) {
         // Draw dividing line (purple/magenta)
         const [p1, p2] = currentStep.dividing_line;
-        ctx.strokeStyle = '#a855f7'; // Purple
+        ctx.strokeStyle = colors.action.primary; // Purple
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(p1[0], height - p1[1]);
@@ -124,7 +125,7 @@ export function Canvas({
             const footY = y1 + t * dy;
             
             // Draw perpendicular line
-            ctx.strokeStyle = '#a855f7';
+            ctx.strokeStyle = colors.action.primary;
             ctx.lineWidth = 1;
             ctx.setLineDash([5, 5]); // Dashed line
             ctx.beginPath();
@@ -137,7 +138,7 @@ export function Canvas({
 
         // Draw test points (yellow)
         currentStep.test_points.forEach(([x, y]) => {
-          ctx.fillStyle = '#f59e0b';
+          ctx.fillStyle = colors.action.warning;
           ctx.beginPath();
           ctx.arc(x, height - y, 6, 0, 2 * Math.PI);
           ctx.fill();
@@ -150,7 +151,7 @@ export function Canvas({
       // Draw hull lines
       if (currentStep.hull.length > 1) {
         // Green if last step (complete), red if in progress
-        ctx.strokeStyle = isLastStep ? '#22c55e' : '#ef4444';
+        ctx.strokeStyle = isLastStep ? colors.action.success : colors.action.danger;
         ctx.lineWidth = isLastStep ? 3 : 2;
         ctx.beginPath();
         // Flip Y coordinates for rendering
@@ -171,7 +172,7 @@ export function Canvas({
 
       // Draw hull points (green)
       currentStep.hull.forEach(([x, y]) => {
-        ctx.fillStyle = '#22c55e';
+        ctx.fillStyle = colors.action.success;
         ctx.beginPath();
         // Flip Y coordinate for rendering
         ctx.arc(x, height - y, 5, 0, 2 * Math.PI);
@@ -186,7 +187,7 @@ export function Canvas({
       // Draw active points (yellow, larger) - only if not QuickHull test points
       if (!currentStep.test_points) {
         currentStep.active.forEach(([x, y]) => {
-          ctx.fillStyle = '#f59e0b';
+          ctx.fillStyle = colors.action.warning;
           ctx.beginPath();
           // Flip Y coordinate for rendering
           ctx.arc(x, height - y, 8, 0, 2 * Math.PI);
@@ -202,7 +203,7 @@ export function Canvas({
   }, [points, currentStep, isLastStep, width, height, margin]);
 
   return (
-    <div style={{ border: '2px solid #444', borderRadius: '8px', display: 'inline-block' }}>
+    <div style={{ border: `2px solid ${colors.border.primary}`, borderRadius: '8px', display: 'inline-block' }}>
       <canvas
         ref={canvasRef}
         width={width}
