@@ -34,7 +34,7 @@ Algorithm Layer (andrews.py, quickhull.py)
 ### Algorithms (Pure Python)
 - `algorithms/andrews.py` - Andrews' Monotone Chain algorithm
 - `algorithms/quickhull.py` - QuickHull algorithm
-- `algorithms/adapter.py` - Converts algorithm output to visualization format
+- `algorithms/adapter.py` - Converts algorithm output to visualization format (only for Andrews)
 
 ---
 
