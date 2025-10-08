@@ -3,6 +3,7 @@
  */
 
 import type { Algorithm } from './types';
+import { colors } from './theme';
 
 interface ControlsProps {
   // Point generation
@@ -73,7 +74,7 @@ export function Controls({
   return (
     <div style={{ 
       padding: '20px', 
-      backgroundColor: '#242424', 
+      backgroundColor: colors.background.primary, 
       borderRadius: '8px',
       marginBottom: '20px',
       position: 'relative'
@@ -85,7 +86,7 @@ export function Controls({
           bottom: '20px',
           right: '20px',
           fontSize: '14px',
-          color: '#aaa'
+          color: colors.text.secondary
         }}>
           Hull Points: {hullPointsCount}
         </div>
@@ -104,19 +105,19 @@ export function Controls({
             style={{ 
               padding: '8px', 
               width: '80px',
-              backgroundColor: '#1a1a1a',
-              color: 'white',
-              border: '1px solid #444',
+              backgroundColor: colors.background.secondary,
+              color: colors.text.primary,
+              border: `1px solid ${colors.border.primary}`,
               borderRadius: '4px'
             }}
           />
           <button onClick={onGenerate} style={buttonStyle}>
             Generate Random
           </button>
-          <button onClick={onClear} style={{ ...buttonStyle, backgroundColor: '#666' }}>
+          <button onClick={onClear} style={{ ...buttonStyle, backgroundColor: colors.text.quaternary }}>
             Clear All
           </button>
-          <span style={{ color: '#888', marginLeft: '10px' }}>
+          <span style={{ color: colors.text.tertiary, marginLeft: '10px' }}>
             (or click canvas to add points)
           </span>
         </div>
@@ -132,9 +133,9 @@ export function Controls({
             disabled={hasSteps}
             style={{ 
               padding: '8px', 
-              backgroundColor: '#1a1a1a',
-              color: 'white',
-              border: '1px solid #444',
+              backgroundColor: colors.background.secondary,
+              color: colors.text.primary,
+              border: `1px solid ${colors.border.primary}`,
               borderRadius: '4px',
               minWidth: '200px',
               cursor: hasSteps ? 'not-allowed' : 'pointer',
@@ -149,7 +150,7 @@ export function Controls({
             disabled={!canRun || hasSteps}
             style={{
               ...buttonStyle,
-              backgroundColor: canRun && !hasSteps ? '#22c55e' : '#444',
+              backgroundColor: canRun && !hasSteps ? colors.action.success : colors.action.disabled,
               cursor: canRun && !hasSteps ? 'pointer' : 'not-allowed'
             }}
           >
@@ -164,7 +165,7 @@ export function Controls({
           <h3 style={{ marginTop: 0, marginBottom: '10px' }}>3. Playback Controls</h3>
           
           {/* Step info */}
-          <div style={{ marginBottom: '10px', color: '#aaa' }}>
+          <div style={{ marginBottom: '10px', color: colors.text.secondary }}>
             Step {currentStep + 1} / {totalSteps}
           </div>
 
@@ -182,7 +183,7 @@ export function Controls({
             <button onClick={onNext} disabled={currentStep >= totalSteps - 1} style={buttonStyle}>
               Next ⏭
             </button>
-            <button onClick={onReset} style={{ ...buttonStyle, backgroundColor: '#666' }}>
+            <button onClick={onReset} style={{ ...buttonStyle, backgroundColor: colors.text.quaternary }}>
               🔄 Reset
             </button>
           </div>
@@ -191,7 +192,7 @@ export function Controls({
           <div style={{ 
             width: '100%', 
             height: '8px', 
-            backgroundColor: '#1a1a1a',
+            backgroundColor: colors.background.secondary,
             borderRadius: '4px',
             marginBottom: '15px',
             overflow: 'hidden'
@@ -199,7 +200,7 @@ export function Controls({
             <div style={{
               width: `${((currentStep + 1) / totalSteps) * 100}%`,
               height: '100%',
-              backgroundColor: '#22c55e',
+              backgroundColor: colors.action.success,
               transition: 'width 0.2s'
             }} />
           </div>
@@ -207,7 +208,7 @@ export function Controls({
           {/* Speed control */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <label htmlFor="speed" style={{ color: '#aaa' }}>Speed:</label>
+              <label htmlFor="speed" style={{ color: colors.text.secondary }}>Speed:</label>
               <input
                 id="speed"
                 type="range"
@@ -218,7 +219,7 @@ export function Controls({
                 onChange={(e) => setSpeed(indexToSpeed(parseInt(e.target.value)))}
                 style={{ flex: 1, maxWidth: '300px' }}
               />
-              <span style={{ color: '#aaa', minWidth: '60px', fontWeight: 'bold' }}>
+              <span style={{ color: colors.text.secondary, minWidth: '60px', fontWeight: 'bold' }}>
                 {speed}x
               </span>
             </div>
@@ -230,7 +231,7 @@ export function Controls({
               marginLeft: '70px',
               marginTop: '5px',
               fontSize: '11px',
-              color: '#666'
+              color: colors.text.quaternary
             }}>
               <span>0.5×</span>
               <span>1×</span>
@@ -251,8 +252,8 @@ export function Controls({
 
 const buttonStyle: React.CSSProperties = {
   padding: '8px 16px',
-  backgroundColor: '#535bf2',
-  color: 'white',
+  backgroundColor: colors.action.primary,
+  color: colors.text.primary,
   border: 'none',
   borderRadius: '4px',
   cursor: 'pointer',

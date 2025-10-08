@@ -4,7 +4,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { api } from './api';
-import type { Algorithm, PerformanceTestResult } from './types';
+import type { Algorithm, PerformanceTestResult, Point } from './types';
+import { colors } from './theme';
 
 export function Performance() {
   const [algorithm, setAlgorithm] = useState<Algorithm>('andrews');
@@ -14,11 +15,21 @@ export function Performance() {
   const [results, setResults] = useState<PerformanceTestResult[]>([]);
   const [elapsedTime, setElapsedTime] = useState(0);
   const timerRef = useRef<number | null>(null);
+  
+  // Generated points state
+  const [pointCount, setPointCount] = useState<number>(1000);
+  const [seed, setSeed] = useState<string>('');
+  const [generatedPoints, setGeneratedPoints] = useState<Point[] | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Mode selection
+  const [mode, setMode] = useState<'upload' | 'generate'>('upload');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
+      setGeneratedPoints(null); // Clear generated points when selecting file
       setError(null);
     }
   };
@@ -42,9 +53,26 @@ export function Performance() {
     }
   }, [isLoading]);
 
+  const handleGeneratePoints = async () => {
+    setError(null);
+    setIsGenerating(true);
+    
+    try {
+      const seedValue = seed.trim() !== '' ? parseInt(seed) : undefined;
+      const points = await api.generatePointsPerformance(pointCount, seedValue);
+      setGeneratedPoints(points);
+      setFile(null); // Clear file selection when generating points
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate points');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleRun = async () => {
-    if (!file) {
-      setError('Please select a file first');
+    // Check if we have either file or generated points
+    if (!file && !generatedPoints) {
+      setError('Please select a file or generate points first');
       return;
     }
 
@@ -52,7 +80,18 @@ export function Performance() {
     setIsLoading(true);
 
     try {
-      const result = await api.uploadFile(file, algorithm);
+      let result: PerformanceTestResult;
+      
+      if (generatedPoints) {
+        // Use generated points
+        result = await api.runPerformanceTest(generatedPoints, algorithm);
+      } else if (file) {
+        // Use uploaded file
+        result = await api.uploadFile(file, algorithm);
+      } else {
+        throw new Error('No data source available');
+      }
+      
       setResults([result, ...results]); // show newest result on top
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to run performance test');
@@ -85,24 +124,24 @@ export function Performance() {
       {/* Instructions */}
       <div style={{
         padding: '20px',
-        backgroundColor: '#242424',
+        backgroundColor: colors.background.primary,
         borderRadius: '8px',
         marginBottom: '20px',
-        border: '2px solid #444'
+        border: `2px solid ${colors.border.primary}`
       }}>
-        <p style={{ color: '#aaa', lineHeight: '1.6', marginBottom: '10px' }}>
+        <p style={{ color: colors.text.secondary, lineHeight: '1.6', marginBottom: '10px' }}>
           Upload a point dataset file to test algorithm performance. 
           The algorithm will run <strong>without visualization</strong>.
         </p>
         <div style={{
           padding: '15px',
-          backgroundColor: '#1a1a1a',
+          backgroundColor: colors.background.secondary,
           borderRadius: '6px',
           fontSize: '14px',
-          color: '#888'
+          color: colors.text.tertiary
         }}>
-          <strong style={{ color: '#f59e0b' }}>File Format:</strong>
-          <pre style={{ margin: '5px 0 0 0', color: '#aaa' }}>
+          <strong style={{ color: colors.action.warning }}>File Format:</strong>
+          <pre style={{ margin: '5px 0 0 0', color: colors.text.secondary }}>
             {`  
             Line 1: n (number of points)
             Lines 2..n+1: x,y (coordinates)
@@ -120,17 +159,17 @@ export function Performance() {
       {/* Upload Controls */}
       <div style={{
         padding: '20px',
-        backgroundColor: '#242424',
+        backgroundColor: colors.background.primary,
         borderRadius: '8px',
         marginBottom: '20px',
-        border: '2px solid #444'
+        border: `2px solid ${colors.border.primary}`
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
           <h3 style={{ margin: 0 }}>Test Configuration</h3>
           {/* Timer display - shown while running */}
           {isLoading && (
             <span style={{
-              color: 'white',
+              color: colors.text.primary,
               fontFamily: 'monospace',
               fontSize: '14px'
             }}>
@@ -138,80 +177,196 @@ export function Performance() {
             </span>
           )}
         </div>
-        
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
-          {/* Algorithm selector */}
-          <div>
-            <label style={{ display: 'block', color: '#aaa', marginBottom: '5px', fontSize: '14px' }}>
-              Algorithm:
-            </label>
-            <select
-              value={algorithm}
-              onChange={(e) => setAlgorithm(e.target.value as Algorithm)}
-              style={{
-                padding: '8px',
-                backgroundColor: '#1a1a1a',
-                color: 'white',
-                border: '1px solid #444',
-                borderRadius: '4px',
-                minWidth: '150px',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="andrews">Andrews</option>
-              <option value="quickhull">QuickHull</option>
-            </select>
-          </div>
 
-          {/* File input */}
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', color: '#aaa', marginBottom: '5px', fontSize: '14px' }}>
-              Dataset File:
-            </label>
-            <input
-              type="file"
-              accept=".txt,.csv"
-              onChange={handleFileChange}
-              style={{
-                padding: '8px',
-                backgroundColor: '#1a1a1a',
-                color: 'white',
-                border: '1px solid #444',
-                borderRadius: '4px',
-                width: '100%',
-                maxWidth: '400px',
-                cursor: 'pointer'
-              }}
-            />
-          </div>
-
-          {/* Run button */}
-          <button
-            onClick={handleRun}
-            disabled={!file || isLoading}
+        {/* Algorithm selector */}
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'block', color: colors.text.secondary, marginBottom: '5px', fontSize: '14px' }}>
+            Algorithm:
+          </label>
+          <select
+            value={algorithm}
+            onChange={(e) => setAlgorithm(e.target.value as Algorithm)}
             style={{
-              padding: '10px 24px',
-              backgroundColor: file && !isLoading ? '#22c55e' : '#444',
-              color: 'white',
-              border: 'none',
+              padding: '8px',
+              backgroundColor: colors.background.secondary,
+              color: colors.text.primary,
+              border: `1px solid ${colors.border.primary}`,
               borderRadius: '4px',
-              cursor: file && !isLoading ? 'pointer' : 'not-allowed',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              marginTop: '20px'
+              minWidth: '150px',
+              cursor: 'pointer'
             }}
           >
-            {isLoading ? 'Running...' : 'Run Test'}
+            <option value="andrews">Andrews</option>
+            <option value="quickhull">QuickHull</option>
+          </select>
+        </div>
+
+        {/* Mode selector tabs */}
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+          <button
+            onClick={() => setMode('upload')}
+            style={{
+              padding: '8px 20px',
+              backgroundColor: mode === 'upload' ? colors.action.primary : colors.background.tertiary,
+              color: colors.text.primary,
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: mode === 'upload' ? 'bold' : 'normal',
+              transition: 'background-color 0.2s'
+            }}
+          >
+            📁 Upload File
+          </button>
+          <button
+            onClick={() => setMode('generate')}
+            style={{
+              padding: '8px 20px',
+              backgroundColor: mode === 'generate' ? colors.action.primary : colors.background.tertiary,
+              color: colors.text.primary,
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: mode === 'generate' ? 'bold' : 'normal',
+              transition: 'background-color 0.2s'
+            }}
+          >
+            Generate Points
           </button>
         </div>
+
+        {/* Upload Mode */}
+        {mode === 'upload' && (
+          <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', color: colors.text.secondary, marginBottom: '5px', fontSize: '14px' }}>
+                Dataset File:
+              </label>
+              <input
+                type="file"
+                accept=".txt,.csv"
+                onChange={handleFileChange}
+                style={{
+                  padding: '8px',
+                  backgroundColor: colors.background.secondary,
+                  color: colors.text.primary,
+                  border: `1px solid ${colors.border.primary}`,
+                  borderRadius: '4px',
+                  width: '100%',
+                  maxWidth: '400px',
+                  cursor: 'pointer'
+                }}
+              />
+            </div>
+            <button
+              onClick={handleRun}
+              disabled={!file || isLoading}
+              style={{
+                padding: '10px 24px',
+                backgroundColor: file && !isLoading ? colors.action.success : colors.action.disabled,
+                color: colors.text.primary,
+                border: 'none',
+                borderRadius: '4px',
+                cursor: file && !isLoading ? 'pointer' : 'not-allowed',
+                fontSize: '14px',
+                fontWeight: 'bold'
+              }}
+            >
+              {isLoading ? 'Running...' : 'Run Test'}
+            </button>
+          </div>
+        )}
+
+        {/* Generate Mode */}
+        {mode === 'generate' && (
+          <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <div>
+              <label style={{ display: 'block', color: colors.text.secondary, marginBottom: '5px', fontSize: '14px' }}>
+                Number of Points:
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={pointCount}
+                onChange={(e) => setPointCount(parseInt(e.target.value) || 1)}
+                disabled={isGenerating}
+                style={{
+                  padding: '8px',
+                  backgroundColor: colors.background.secondary,
+                  color: colors.text.primary,
+                  border: `1px solid ${colors.border.primary}`,
+                  borderRadius: '4px',
+                  width: '150px',
+                  cursor: isGenerating ? 'not-allowed' : 'text'
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', color: colors.text.secondary, marginBottom: '5px', fontSize: '14px' }}>
+                Seed (optional):
+              </label>
+              <input
+                type="text"
+                placeholder="Random"
+                value={seed}
+                onChange={(e) => setSeed(e.target.value)}
+                disabled={isGenerating}
+                style={{
+                  padding: '8px',
+                  backgroundColor: colors.background.secondary,
+                  color: colors.text.primary,
+                  border: `1px solid ${colors.border.primary}`,
+                  borderRadius: '4px',
+                  width: '120px',
+                  cursor: isGenerating ? 'not-allowed' : 'text'
+                }}
+              />
+            </div>
+            <button
+              onClick={handleGeneratePoints}
+              disabled={isGenerating || pointCount < 1}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: !isGenerating && pointCount >= 1 ? colors.action.primary : colors.action.disabled,
+                color: colors.text.primary,
+                border: 'none',
+                borderRadius: '4px',
+                cursor: !isGenerating && pointCount >= 1 ? 'pointer' : 'not-allowed',
+                fontSize: '14px',
+                fontWeight: 'bold'
+              }}
+            >
+              {isGenerating ? 'Generating...' : 'Generate'}
+            </button>
+            <button
+              onClick={handleRun}
+              disabled={!generatedPoints || isLoading}
+              style={{
+                padding: '10px 24px',
+                backgroundColor: generatedPoints && !isLoading ? colors.action.success : colors.action.disabled,
+                color: colors.text.primary,
+                border: 'none',
+                borderRadius: '4px',
+                cursor: generatedPoints && !isLoading ? 'pointer' : 'not-allowed',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                marginLeft: 'auto'
+              }}
+            >
+              {isLoading ? 'Running...' : 'Run Test'}
+            </button>
+          </div>
+        )}
 
         {/* Error display */}
         {error && (
           <div style={{
             marginTop: '15px',
             padding: '12px',
-            backgroundColor: '#ef4444',
-            color: 'white',
+            backgroundColor: colors.action.danger,
+            color: colors.text.primary,
             borderRadius: '6px'
           }}>
             ⚠️ {error}
@@ -223,12 +378,27 @@ export function Performance() {
           <div style={{
             marginTop: '15px',
             padding: '10px',
-            backgroundColor: '#1a1a1a',
+            backgroundColor: colors.background.secondary,
             borderRadius: '6px',
             fontSize: '14px',
-            color: '#aaa'
+            color: colors.text.secondary
           }}>
-            📁 Selected: <strong style={{ color: 'white' }}>{file.name}</strong> ({Math.round(file.size / 1024)} KB)
+            📁 Selected: <strong style={{ color: colors.text.primary }}>{file.name}</strong> ({Math.round(file.size / 1024)} KB)
+          </div>
+        )}
+
+        {/* Generated points info */}
+        {generatedPoints && (
+          <div style={{
+            marginTop: '15px',
+            padding: '10px',
+            backgroundColor: colors.background.secondary,
+            borderRadius: '6px',
+            fontSize: '14px',
+            color: colors.text.secondary
+          }}>
+            Generated: <strong>{generatedPoints.length.toLocaleString()}</strong> points 
+            {seed && <span> (seed: <strong>{seed}</strong>)</span>}
           </div>
         )}
       </div>
@@ -237,9 +407,9 @@ export function Performance() {
       {results.length > 0 && (
         <div style={{
           padding: '20px',
-          backgroundColor: '#242424',
+          backgroundColor: colors.background.primary,
           borderRadius: '8px',
-          border: '2px solid #444'
+          border: `2px solid ${colors.border.primary}`
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
             <h3 style={{ margin: 0 }}>Results</h3>
@@ -247,8 +417,8 @@ export function Performance() {
               onClick={handleClearResults}
               style={{
                 padding: '6px 12px',
-                backgroundColor: '#666',
-                color: 'white',
+                backgroundColor: colors.text.quaternary,
+                color: colors.text.primary,
                 border: 'none',
                 borderRadius: '4px',
                 cursor: 'pointer',
@@ -266,7 +436,7 @@ export function Performance() {
               fontSize: '14px'
             }}>
               <thead>
-                <tr style={{ borderBottom: '2px solid #444' }}>
+                <tr style={{ borderBottom: `2px solid ${colors.border.primary}` }}>
                   <th style={tableHeaderStyle}>Algorithm</th>
                   <th style={tableHeaderStyle}>Input Points</th>
                   <th style={tableHeaderStyle}>Hull Points</th>
@@ -276,11 +446,11 @@ export function Performance() {
               </thead>
               <tbody>
                 {results.map((result, index) => (
-                  <tr key={index} style={{ borderBottom: '1px solid #333' }}>
+                  <tr key={index} style={{ borderBottom: `1px solid ${colors.border.light}` }}>
                     <td style={tableCellStyle}>
                       <span style={{
                         padding: '4px 8px',
-                        backgroundColor: '#535bf2',
+                        backgroundColor: colors.action.primary,
                         borderRadius: '4px',
                         fontSize: '12px',
                         fontWeight: 'bold'
@@ -291,7 +461,7 @@ export function Performance() {
                     <td style={tableCellStyle}>{result.input_points.toLocaleString()}</td>
                     <td style={tableCellStyle}>{result.hull_points.length}</td>
                     <td style={tableCellStyle}>
-                      <strong style={{ color: '#22c55e' }}>
+                      <strong style={{ color: colors.action.success }}>
                         {result.runtime_seconds.toFixed(6)}
                       </strong>
                     </td>
@@ -312,12 +482,12 @@ export function Performance() {
 const tableHeaderStyle: React.CSSProperties = {
   padding: '12px',
   textAlign: 'left',
-  color: '#aaa',
+  color: colors.text.secondary,
   fontWeight: 'bold'
 };
 
 const tableCellStyle: React.CSSProperties = {
   padding: '12px',
-  color: 'white'
+  color: colors.text.primary
 };
 

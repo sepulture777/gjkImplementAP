@@ -8,6 +8,7 @@ import { Controls } from './Controls';
 import { Performance } from './Performance';
 import { api } from './api';
 import type { Point, AlgorithmStep, Algorithm, AppMode } from './types';
+import { colors } from './theme';
 import './App.css';
 
 function App() {
@@ -164,9 +165,9 @@ function App() {
               onClick={() => setMode('visualization')}
               style={{
                 padding: '10px 20px',
-                backgroundColor: mode === 'visualization' ? '#535bf2' : '#2a2a2a',
-                color: 'white',
-                border: mode === 'visualization' ? '2px solid #535bf2' : '2px solid #444',
+                backgroundColor: mode === 'visualization' ? colors.action.primary : colors.background.primary,
+                color: colors.text.primary,
+                border: mode === 'visualization' ? `2px solid ${colors.action.primary}` : `2px solid ${colors.border.primary}`,
                 borderRadius: '6px',
                 cursor: 'pointer',
                 fontSize: '14px',
@@ -180,9 +181,9 @@ function App() {
               onClick={() => setMode('performance')}
               style={{
                 padding: '10px 20px',
-                backgroundColor: mode === 'performance' ? '#535bf2' : '#2a2a2a',
-                color: 'white',
-                border: mode === 'performance' ? '2px solid #535bf2' : '2px solid #444',
+                backgroundColor: mode === 'performance' ? colors.action.primary : colors.background.primary,
+                color: colors.text.primary,
+                border: mode === 'performance' ? `2px solid ${colors.action.primary}` : `2px solid ${colors.border.primary}`,
                 borderRadius: '6px',
                 cursor: 'pointer',
                 fontSize: '14px',
@@ -199,8 +200,8 @@ function App() {
         {error && (
           <div style={{
             padding: '12px',
-            backgroundColor: 'red',
-            color: 'white',
+            backgroundColor: colors.action.danger,
+            color: colors.text.primary,
             borderRadius: '6px',
             marginBottom: '20px'
           }}>
@@ -212,8 +213,8 @@ function App() {
         {mode === 'visualization' && isLoading && (
           <div style={{
             padding: '12px',
-            backgroundColor: '#535bf2',
-            color: 'white',
+            backgroundColor: colors.action.primary,
+            color: colors.text.primary,
             borderRadius: '6px',
             marginBottom: '20px'
           }}>
