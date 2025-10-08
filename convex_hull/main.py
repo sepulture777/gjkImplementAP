@@ -59,7 +59,7 @@ def main():
         else:
             print("✗ Die Hüllen stimmen NICHT überein!")
     except ImportError:
-        print("⚠️ SciPy ist nicht installiert. Überspringe Vergleich.")
+        print("SciPy ist nicht installiert. Überspringe Vergleich.")
     print()
     print("Test abgeschlossen.")
 

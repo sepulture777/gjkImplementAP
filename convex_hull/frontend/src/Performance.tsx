@@ -369,7 +369,7 @@ export function Performance() {
             color: colors.text.primary,
             borderRadius: '6px'
           }}>
-            ⚠️ {error}
+            {error}
           </div>
         )}
 
@@ -383,7 +383,7 @@ export function Performance() {
             fontSize: '14px',
             color: colors.text.secondary
           }}>
-            📁 Selected: <strong style={{ color: colors.text.primary }}>{file.name}</strong> ({Math.round(file.size / 1024)} KB)
+            Selected: <strong style={{ color: colors.text.primary }}>{file.name}</strong> ({Math.round(file.size / 1024)} KB)
           </div>
         )}
 
