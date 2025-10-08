@@ -211,4 +211,122 @@ def quickhull_algorithm(points: List[Point], step_mode: bool = False, verbose: b
     return hull
 
 
+def supersonic_hull(points: List[Point]):
+    """
+    QuickHull variant that uses NumPy vectorization.
+    """
+    import numpy as np
+
+    pts = np.asarray(points, dtype=float)
+    n = pts.shape[0]
+    if n < 3:
+        return list(map(tuple, points))
+
+    # find leftmost and rightmost in x
+    xs = pts[:, 0]
+    min_idx = int(np.argmin(xs))
+    max_idx = int(np.argmax(xs))
+    p_min = pts[min_idx]
+    p_max = pts[max_idx]
+
+    # unordered hull as a set of tuples for fast insertion
+    # using a set avoids costly list.insert operations and ordering
+    # which is fine because the caller does not require an ordered hull
+    hull_set = set()
+    hull_set.add((float(p_min[0]), float(p_min[1])))
+    hull_set.add((float(p_max[0]), float(p_max[1])))
+
+    # Simple instrumentation counters to observe work done by the numpy path
+    # We count how many vectorized cross-array evaluations occur and how many
+    # hull insertions were made. We also print a short snapshot each time a
+    # farthest point is accepted so you can see what the frontend would get.
+    counters = {
+        'cross_calls': 0,
+        'insertions': 0,
+        'steps': 0,
+    }
+
+    # vectorized cross product helper: returns array of signed distances
+    def cross_array(p1, p2, arr):
+        # Time: O(r) for an input arr of length r (NumPy does C-level loops).
+        # Space: O(r) for the returned NumPy array of cross values.
+        # Reason: each call computes signed distances for a whole subset in one vectorized operation.
+        # Complexity should be counted in the number of elements processed; repeated calls over
+        # disjoint subsets sum to at most O(n log n) average work (same algorithmic class as QuickHull).
+        # cross = (p2.x-p1.x)*(y-p1.y) - (p2.y-p1.y)*(x-p1.x)
+        # This is vectorized: NumPy evaluates this with C loops for the whole
+        # array `arr` which is much faster than a Python loop calling
+        # findSide/lineDist for each point.
+        counters['cross_calls'] += 1
+        return (p2[0] - p1[0]) * (arr[:, 1] - p1[1]) - (p2[1] - p1[1]) * (arr[:, 0] - p1[0])
+
+    # recurse using numpy index arrays (each recursion gets indices into pts)
+    def recurse(idxs: np.ndarray, p1: np.ndarray, p2: np.ndarray):
+        # Time (average): work proportional to the number of indices processed in this call.
+        # Space: extra O(r) for subset arrays created from idxs. Recursion depth is bounded by O(n)
+        # but is typically shallow on average inputs.
+        # Reason: the function selects the farthest point by a vectorized scan (argmax over abs cross),
+        # then builds boolean masks for child subsets and recurses. Overall complexity mirrors QuickHull
+        # (average O(n log n), worst-case O(n^2)), but vectorized operations reduce Python overhead.
+        if idxs.size == 0:
+            return
+
+        subset = pts[idxs]
+        # vectorized signed distances for this segment
+        cross = cross_array(p1, p2, subset)
+        # if no candidate on this side, return
+        if cross.size == 0 or np.all(cross == 0):
+            return
+
+        # farthest is the point with maximum absolute cross (perpendicular distance)
+        far_local = int(np.argmax(np.abs(cross)))
+        far_idx = int(idxs[far_local])
+        far = pts[far_idx]
+
+        # add farthest point into the unordered hull set and instrument
+        hull_set.add((float(far[0]), float(far[1])))
+        counters['insertions'] += 1
+        counters['steps'] += 1
+        # Compact instrumentation line for terminal inspection
+        print(f"[supersonic_hull] STEP {counters['steps']}: measured={tuple(map(float, far))} "
+              f"from=({tuple(map(float, p1))},{tuple(map(float, p2))}) hull_size={len(hull_set)}")
+
+        # build child index arrays (vectorized tests)
+        mask_left = cross_array(p1, far, subset) > 0
+        mask_right = cross_array(far, p2, subset) > 0
+
+        left_idxs = idxs[mask_left]
+        right_idxs = idxs[mask_right]
+
+        # recurse on children
+        recurse(left_idxs, p1, far)
+        recurse(right_idxs, far, p2)
+
+    # initial indices: all except endpoints
+    all_idxs = np.arange(n, dtype=int)
+    mask_initial = (all_idxs != min_idx) & (all_idxs != max_idx)
+    idxs0 = all_idxs[mask_initial]
+
+    # partition initial set into left and right of the main dividing line
+    subset0 = pts[idxs0]
+    cross0 = cross_array(p_min, p_max, subset0)
+    left_mask = cross0 > 0
+    right_mask = cross0 < 0
+    left_idxs = idxs0[left_mask]
+    right_idxs = idxs0[right_mask]
+
+    # recurse on both sides
+    recurse(left_idxs, p_min, p_max)
+    recurse(right_idxs, p_max, p_min)
+
+    # Print instrumentation summary
+    print(f"[supersonic_hull] done: cross_calls={counters['cross_calls']}, "
+        f"insertions={counters['insertions']}, steps={counters['steps']}")
+
+    # return unordered hull points as a list (no particular order)
+    return list(hull_set)
+
+
+
+
 
