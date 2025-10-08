@@ -3,11 +3,12 @@ from typing import List, Tuple
 from .models import Point
 
 def orientation(p: Point, q: Point, r: Point) -> float:
-    """Kreuzprodukt: >0 = links, <0 = rechts, 0 = kollinear"""
+    # Kreuzprodukt: >0 = links, <0 = rechts, 0 = kollinear
     return (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
 
+## BIG O: Bei jedem Aufruf wird die Liste in zwei Hälften geteilt. Die Tiefe der Rekursion daher: O(log n).
 def merge_sort(points: List[Point]) -> List[Point]:
-    """Sortiert Punkte nach x, dann y mit Merge-Sort"""
+    
     if len(points) <= 1:
         return points
     mid = len(points) // 2
@@ -15,6 +16,7 @@ def merge_sort(points: List[Point]) -> List[Point]:
     right = merge_sort(points[mid:])
     return merge(left, right)
 
+# BIG O:  Auf jeder Ebene werden alle n Elemente einmal beim Mergen verglichen oder verschoben.Das Zusammenführen (merge) braucht also O(n) Zeit.
 def merge(left: List[Point], right: List[Point]) -> List[Point]:
     result = []
     i = j = 0
@@ -29,26 +31,25 @@ def merge(left: List[Point], right: List[Point]) -> List[Point]:
     result.extend(right[j:])
     return result
 
+# 
 def andrews_algorithm(points: List[Point], step_mode: bool = False):
-    """    
-    Args:
-        points: Liste von (x,y)-Tupeln
-        step_mode: True -> gibt Liste von Zwischenschritten zurück
-                   False -> gibt fertige Hülle zurück
-    
-    Returns:
-        hull (list[Point]) oder steps (list[list[Point]])
-    """
+    # Argumente: points Liste von Tupeln, step_mode: true oder false
+    # Rückgabe: Liste von Tupeln (Hülle) oder Liste von Listen von Tupeln (Zwischenschritte)
+
     if len(points) <= 1:
         return points
 
+    # Sortiere Punkte mit merge sort
+    # BIG O: O(n log n) siehe merge_sort und merge
     pts = merge_sort(points)
 
     steps = [] if step_mode else None
 
     # Untere Hülle
+    # Vergleiche jeden Punkt mit den letzten beiden Punkten in der Hülle
+    # Wenn der neue Punkt eine Rechtsdrehung macht, entferne den letzten Punkt
     lower = []
-    for p in pts:
+    for p in pts: # Big O: O(n) weil n mal läuft
         while len(lower) >= 2 and orientation(lower[-2], lower[-1], p) <= 0:
             lower.pop()
             if step_mode:
@@ -58,7 +59,9 @@ def andrews_algorithm(points: List[Point], step_mode: bool = False):
             steps.append(lower.copy())
 
     # Obere Hülle
-    upper = []
+    # Vergleiche jeden Punkt mit den letzten beiden Punkten in der Hülle
+    # Wenn der neue Punkt eine Rechtsdrehung macht, entferne den letzten Punkt
+    upper = [] # Big O: O(n) weil n mal läuft
     for p in reversed(pts):
         while len(upper) >= 2 and orientation(upper[-2], upper[-1], p) <= 0:
             upper.pop()
@@ -68,6 +71,7 @@ def andrews_algorithm(points: List[Point], step_mode: bool = False):
         if step_mode:
             steps.append(upper.copy())
 
+    # Entferne den letzten Punkt jeder Hälfte, da er der erste Punkt der anderen Hälfte ist
     hull = lower[:-1] + upper[:-1]
 
     if step_mode:
