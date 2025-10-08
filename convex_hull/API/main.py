@@ -1,8 +1,3 @@
-"""
-FastAPI backend for Convex Hull Visualizer.
-Simple, single-user, local-only API.
-"""
-
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,7 +21,7 @@ from algorithms.models import Point
 
 app = FastAPI(title="Convex Hull Visualizer API")
 
-# CORS for local development
+# CORS 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:3000"],
@@ -48,25 +43,12 @@ class GeneratePointsRequest(BaseModel):
     y_max: float = 1000.0
 
 
-# Endpoints
-@app.get("/")
-def root():
-    """Health check endpoint"""
-    return {
-        "message": "Convex Hull Visualizer API",
-        "status": "running",
-        "algorithms": ["andrews", "quickhull"]
-    }
-
-
 @app.post("/api/compute")
 def compute_algorithm(request: ComputeRequest, step_mode: bool = True):
     """
     Compute all steps for the selected algorithm at once.
     
     step_mode: If True, returns all visualization steps. If False, only returns final hull (for performance testing).
-    Returns all steps so the frontend can play them back locally.
-    No session management - simple and stateless.
     """
     if not request.points:
         raise HTTPException(status_code=400, detail="No points provided")
@@ -84,14 +66,14 @@ def compute_algorithm(request: ComputeRequest, step_mode: bool = True):
     
     try:
         if request.algorithm == "andrews":
-            # Get raw steps from algorithm (List[List[Point]])
+            # Get raw steps from algorithm
             start_time = time.perf_counter()
             raw_result = andrews_algorithm(request.points, step_mode=step_mode)
             end_time = time.perf_counter()
             
             # If step_mode is False, raw_result is just the final hull, not steps
             if step_mode:
-                viz_steps = adapt_for_visualization(raw_result, request.points, algorithm="andrews")
+                viz_steps = adapt_for_visualization(raw_result)
             else:
                 # For performance mode: raw_result is the final hull directly
                 viz_steps = [{
@@ -104,9 +86,9 @@ def compute_algorithm(request: ComputeRequest, step_mode: bool = True):
             raw_result = quickhull_algorithm(request.points, step_mode=step_mode)
             end_time = time.perf_counter()
             
-            # If step_mode is False, raw_result is just the final hull, not steps
+            # QuickHull already returns the correct format - no adapter needed
             if step_mode:
-                viz_steps = adapt_for_visualization(raw_result, request.points, algorithm="quickhull")
+                viz_steps = raw_result  # Already in correct dict format
             else:
                 # For performance mode: raw_result is the final hull directly
                 viz_steps = [{
@@ -187,28 +169,6 @@ def generate_points_performance(count: int = 1000, seed: int = None):
         "points": points
     }
 
-@app.get("/api/algorithms")
-def list_algorithms():
-
-    """List available algorithms"""
-    return {
-        "algorithms": [
-            {
-                "id": "andrews",
-                "name": "Andrews",
-                "description": "Sorts points and builds lower/upper hull separately",
-                "implemented": True
-            },
-            {
-                "id": "quickhull",
-                "name": "QuickHull",
-                "description": "Divide-and-conquer approach similar to quicksort",
-                "implemented": True
-            }
-        ]
-    }
-
-
 @app.post("/upload/")
 async def upload_file(
     file: UploadFile = File(...),
@@ -266,7 +226,7 @@ async def upload_file(
             if csvfile.tell() == 0:
                 writer.writerow(["dataset","timestamp", "algorithm", "points", "runtime_seconds"])
             writer.writerow([
-                file.filename,
+                file.filename if hasattr(file, "filename") and file.filename else "No FileName",
                 time.strftime("%Y-%m-%d %H:%M:%S"),
                 algorithm,
                 len(points),
@@ -285,6 +245,7 @@ async def upload_file(
 
 
 if __name__ == "__main__":
+    # Run backend / FastAPI
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
 
