@@ -25,7 +25,7 @@ export function Performance() {
   // Mode selection
   const [mode, setMode] = useState<'upload' | 'generate'>('upload');
   
-  // Accordion state - track which result index is expanded
+  // Accordion state, track which result index is expanded, Momentan kann nur ein Resultat expanded werden
   const [expandedResultIndex, setExpandedResultIndex] = useState<number | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,6 +38,7 @@ export function Performance() {
   };
 
   // Timer effect - starts when loading begins
+  // DIESER TIMER IST NICHT DIE PERFORMANCE METRIK, DIE WIR MIT DEM BACKEND BEKOMMEN
   useEffect(() => {
     if (isLoading) {
       setElapsedTime(0);
@@ -112,7 +113,7 @@ export function Performance() {
     setExpandedResultIndex(expandedResultIndex === index ? null : index);
   };
 
-  // Format elapsed time -> only frontend display, what we get from the backend is in milliseconds and can vary from this time
+  // Format elapsed time --> only frontend disply, what we get from the backend is in milliseconds and can vary from this time
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -174,7 +175,7 @@ export function Performance() {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
           <h3 style={{ margin: 0 }}>Test Configuration</h3>
-          {/* Timer display - shown while running */}
+          {/* Timer display, this is only shown while running */}
           {isLoading && (
             <span style={{
               color: colors.text.primary,
@@ -555,6 +556,7 @@ export function Performance() {
   );
 }
 
+// Style für die Tabelle
 const tableHeaderStyle: React.CSSProperties = {
   padding: '12px',
   textAlign: 'left',
@@ -562,6 +564,7 @@ const tableHeaderStyle: React.CSSProperties = {
   fontWeight: 'bold'
 };
 
+// Style für die Zellen in der Tabelle
 const tableCellStyle: React.CSSProperties = {
   padding: '12px',
   color: colors.text.primary
