@@ -99,8 +99,8 @@ export const api = {
    * Run performance test on in-memory points (generated or custom)
    */
   async runPerformanceTest(points: Point[], algorithm: Algorithm): Promise<PerformanceTestResult> {
-    // Use the compute endpoint to run the algorithm
-    const response = await fetch(`${API_BASE_URL}/api/compute`, {
+    // BENUTZE compute endpoint with step_mode=false for performance testing (Keine viz Steps!
+    const response = await fetch(`${API_BASE_URL}/api/compute?step_mode=false`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

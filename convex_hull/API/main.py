@@ -20,6 +20,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from algorithms.andrews import andrews_algorithm
 from algorithms.quickhull import quickhull_algorithm
+# from algorithms.quickhull import supersonic_hull
 from algorithms.adapter import adapt_for_visualization
 from algorithms.models import Point
 
@@ -59,10 +60,11 @@ def root():
 
 
 @app.post("/api/compute")
-def compute_algorithm(request: ComputeRequest):
+def compute_algorithm(request: ComputeRequest, step_mode: bool = True):
     """
     Compute all steps for the selected algorithm at once.
     
+    step_mode: If True, returns all visualization steps. If False, only returns final hull (for performance testing).
     Returns all steps so the frontend can play them back locally.
     No session management - simple and stateless.
     """
@@ -82,29 +84,35 @@ def compute_algorithm(request: ComputeRequest):
     
     try:
         if request.algorithm == "andrews":
-
             # Get raw steps from algorithm (List[List[Point]])
             start_time = time.perf_counter()
-            raw_steps = andrews_algorithm(request.points, step_mode=True)
+            raw_result = andrews_algorithm(request.points, step_mode=step_mode)
             end_time = time.perf_counter()
-            # Convert to visualization format
-
-            viz_steps = adapt_for_visualization(raw_steps, request.points, algorithm="andrews")
+            
+            # If step_mode is False, raw_result is just the final hull, not steps
+            if step_mode:
+                viz_steps = adapt_for_visualization(raw_result, request.points, algorithm="andrews")
+            else:
+                # For performance mode: raw_result is the final hull directly
+                viz_steps = [{
+                    "hull": raw_result,
+                    "active": []
+                }]
+                
         elif request.algorithm == "quickhull":
             start_time = time.perf_counter()
-            raw_steps = quickhull_algorithm(request.points, step_mode=True)
+            raw_result = quickhull_algorithm(request.points, step_mode=step_mode)
             end_time = time.perf_counter()
-            # print("\n" + "=================")
-            # print("RAW STEPS:")
-            # print("=================")
-            # print(json.dumps(raw_steps, indent=2))
-            # print("=================" + "\n")
-            viz_steps = adapt_for_visualization(raw_steps, request.points, algorithm="quickhull")
-            # print("\n" + "=================")
-            # print("VISUALIZATION STEPS:")
-            # print("=================")
-            # print(json.dumps(viz_steps, indent=2))
-            # print("=================" + "\n")
+            
+            # If step_mode is False, raw_result is just the final hull, not steps
+            if step_mode:
+                viz_steps = adapt_for_visualization(raw_result, request.points, algorithm="quickhull")
+            else:
+                # For performance mode: raw_result is the final hull directly
+                viz_steps = [{
+                    "hull": raw_result,
+                    "active": []
+                }]
         else:
             raise HTTPException(
                 status_code=400, 
