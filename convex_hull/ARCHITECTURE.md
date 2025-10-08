@@ -47,24 +47,3 @@ Algorithm Layer (andrews.py, quickhull.py)
 | `GET /api/generate-points-performance` | Generate random points for testing |
 
 ---
-
-## Data Flow
-
-**Visualization Mode:**
-1. Frontend sends points + algorithm to `/api/compute?step_mode=true`
-2. Backend runs algorithm with all intermediate steps
-3. Frontend receives steps array and plays back locally
-
-**Performance Mode:**
-1. Frontend sends points + algorithm to `/api/compute?step_mode=false`
-2. Backend runs algorithm, returns only final hull + runtime
-3. Frontend displays results in table
-
----
-
-## Design Principles
-
-- **Stateless**: No sessions, all computation on-demand
-- **Step Mode**: Flag controls whether to compute visualization steps or only final hull
-- **Client-Side Playback**: Visualization steps computed once, played locally in browser
-- **No Database**: Pure computation, no data persistence
