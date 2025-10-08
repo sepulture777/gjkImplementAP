@@ -37,7 +37,7 @@ interface ControlsProps {
   hullPointsCount: number;
 }
 
-// Speed presets for slider (0-8 positions)
+// Speed presets for the slider
 const SPEED_PRESETS = [0.5, 1, 2, 3, 5, 10, 20, 50, 100];
 
 function speedToIndex(speed: number): number {
@@ -159,12 +159,12 @@ export function Controls({
         </div>
       </div>
 
-      {/* Playback Controls (only when steps exist) */}
+      {/* Playback Controls (nur when Algorithmus bereits berechnet wurde) */}
       {hasSteps && (
         <div>
           <h3 style={{ marginTop: 0, marginBottom: '10px' }}>3. Playback Controls</h3>
           
-          {/* Step info */}
+          {/* Step info, what step we on*/}
           <div style={{ marginBottom: '10px', color: colors.text.secondary }}>
             Step {currentStep + 1} / {totalSteps}
           </div>
@@ -178,17 +178,17 @@ export function Controls({
               onClick={isPlaying ? onPause : onPlay} 
               style={{ ...buttonStyle, minWidth: '100px' }}
             >
-              {isPlaying ? '⏸ Pause' : '▶ Play'}
+              {isPlaying ? '⏸ Pause' : 'Play'}
             </button>
             <button onClick={onNext} disabled={currentStep >= totalSteps - 1} style={buttonStyle}>
               Next ⏭
             </button>
             <button onClick={onReset} style={{ ...buttonStyle, backgroundColor: colors.text.quaternary }}>
-              🔄 Reset
+              Reset
             </button>
           </div>
 
-          {/* Progress bar */}
+          {/* Progress bar, einfach die step/totalSteps anzeigen*/}
           <div style={{ 
             width: '100%', 
             height: '8px', 
@@ -205,7 +205,7 @@ export function Controls({
             }} />
           </div>
 
-          {/* Speed control */}
+          {/* Speed control, a*/}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <label htmlFor="speed" style={{ color: colors.text.secondary }}>Speed:</label>
@@ -223,7 +223,7 @@ export function Controls({
                 {speed}x
               </span>
             </div>
-            {/* Speed tick labels */}
+            {/* Speed labels / options, Speed_Presets anzeigen und dann x dahinter */}
             <div style={{ 
               display: 'flex', 
               justifyContent: 'space-between',
@@ -233,15 +233,9 @@ export function Controls({
               fontSize: '11px',
               color: colors.text.quaternary
             }}>
-              <span>0.5×</span>
-              <span>1×</span>
-              <span>2×</span>
-              <span>3×</span>
-              <span>5×</span>
-              <span>10×</span>
-              <span>20×</span>
-              <span>50×</span>
-              <span>100×</span>
+              {SPEED_PRESETS.map((preset) => (
+                <span key={preset}>{preset}×</span>
+              ))}
             </div>
           </div>
         </div>
