@@ -133,15 +133,18 @@ def compute_algorithm(request: ComputeRequest):
 @app.post("/api/generate-points")
 def generate_points(request: GeneratePointsRequest):
     """
-    Generate random points for visualization.
-    Simple uniform distribution.
+    Generate random points for visualization. 
+    Benutzt die generate_points Funktion aus der data/generator.py Datei.
     """
     if request.count < 1:
-        raise HTTPException(status_code=400, detail="Count must be at least 1")
+        raise HTTPException(status_code=400, detail="Count should beat least 1")
     
+    # maximum 10000 points for visualization, visualization makes no sense for more than that
     if request.count > 10000:
-        raise HTTPException(status_code=400, detail="Count too large (max 10000)")
+        raise HTTPException(status_code=400, detail="Count too large for visualization")
     
+    # Wir benutzen die x_max und y_max von unserem im Frontend definierten Canvas Dimensions
+    # Damit wir nicht über den Canvas hinaus gehen (alle Punkte sollen hier innerhalb des Canvas liegen)
     points = [
         (
             round(random.uniform(0, request.x_max), 2),
@@ -155,6 +158,7 @@ def generate_points(request: GeneratePointsRequest):
 
 @app.get("/api/algorithms")
 def list_algorithms():
+
     """List available algorithms"""
     return {
         "algorithms": [

@@ -31,6 +31,9 @@ interface ControlsProps {
   // Speed control
   speed: number;
   setSpeed: (speed: number) => void;
+  
+  // Hull info
+  hullPointsCount: number;
 }
 
 // Speed presets for slider (0-8 positions)
@@ -65,14 +68,29 @@ export function Controls({
   hasSteps,
   speed,
   setSpeed,
+  hullPointsCount,
 }: ControlsProps) {
   return (
     <div style={{ 
       padding: '20px', 
       backgroundColor: '#242424', 
       borderRadius: '8px',
-      marginBottom: '20px'
+      marginBottom: '20px',
+      position: 'relative'
     }}>
+      {/* Hull Points Counter, zeigen wir nur wenn der Algorithmus fertig ist */}
+      {hasSteps && currentStep === totalSteps - 1 && hullPointsCount > 0 && (
+        <div style={{
+          position: 'absolute',
+          bottom: '20px',
+          right: '20px',
+          fontSize: '14px',
+          color: '#aaa'
+        }}>
+          Hull Points: {hullPointsCount}
+        </div>
+      )}
+      
       {/* Point Generation Section */}
       <div style={{ marginBottom: '20px' }}>
         <h3 style={{ marginTop: 0, marginBottom: '10px' }}>1. Generate Points</h3>
