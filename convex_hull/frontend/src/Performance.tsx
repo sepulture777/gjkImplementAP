@@ -24,6 +24,9 @@ export function Performance() {
   
   // Mode selection
   const [mode, setMode] = useState<'upload' | 'generate'>('upload');
+  
+  // Accordion state - track which result index is expanded
+  const [expandedResultIndex, setExpandedResultIndex] = useState<number | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -102,6 +105,11 @@ export function Performance() {
 
   const handleClearResults = () => {
     setResults([]);
+    setExpandedResultIndex(null); // Close any expanded accordion
+  };
+
+  const toggleResultExpansion = (index: number) => {
+    setExpandedResultIndex(expandedResultIndex === index ? null : index);
   };
 
   // Format elapsed time -> only frontend display, what we get from the backend is in milliseconds and can vary from this time
@@ -217,7 +225,7 @@ export function Performance() {
               transition: 'background-color 0.2s'
             }}
           >
-            📁 Upload File
+            Upload File
           </button>
           <button
             onClick={() => setMode('generate')}
@@ -446,29 +454,97 @@ export function Performance() {
               </thead>
               <tbody>
                 {results.map((result, index) => (
-                  <tr key={index} style={{ borderBottom: `1px solid ${colors.border.light}` }}>
-                    <td style={tableCellStyle}>
-                      <span style={{
-                        padding: '4px 8px',
-                        backgroundColor: colors.action.primary,
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        fontWeight: 'bold'
-                      }}>
-                        {result.algorithm.toUpperCase()}
-                      </span>
-                    </td>
-                    <td style={tableCellStyle}>{result.input_points.toLocaleString()}</td>
-                    <td style={tableCellStyle}>{result.hull_points.length}</td>
-                    <td style={tableCellStyle}>
-                      <strong style={{ color: colors.action.success }}>
-                        {result.runtime_seconds.toFixed(6)}
-                      </strong>
-                    </td>
-                    <td style={tableCellStyle}>
-                      {(result.runtime_seconds * 1000).toFixed(3)}
-                    </td>
-                  </tr>
+                  <>
+                    <tr 
+                      key={index} 
+                      onClick={() => toggleResultExpansion(index)}
+                      style={{ 
+                        borderBottom: expandedResultIndex === index ? 'none' : `1px solid ${colors.border.light}`,
+                        cursor: 'pointer',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.background.secondary}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      <td style={tableCellStyle}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ color: colors.text.secondary, fontSize: '12px' }}>
+                            {expandedResultIndex === index ? '▼' : '▶'}
+                          </span>
+                          <span style={{
+                            padding: '4px 8px',
+                            backgroundColor: colors.action.primary,
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            fontWeight: 'bold'
+                          }}>
+                            {result.algorithm.toUpperCase()}
+                          </span>
+                        </div>
+                      </td>
+                      <td style={tableCellStyle}>{result.input_points.toLocaleString()}</td>
+                      <td style={tableCellStyle}>{result.hull_points.length}</td>
+                      <td style={tableCellStyle}>
+                        <strong style={{ color: colors.action.success }}>
+                          {result.runtime_seconds.toFixed(6)}
+                        </strong>
+                      </td>
+                      <td style={tableCellStyle}>
+                        {(result.runtime_seconds * 1000).toFixed(3)}
+                      </td>
+                    </tr>
+                    {/* Expanded hull points section */}
+                    {expandedResultIndex === index && (
+                      <tr key={`${index}-expanded`}>
+                        <td colSpan={5} style={{ 
+                          padding: '15px 20px',
+                          backgroundColor: colors.background.secondary,
+                          borderBottom: `1px solid ${colors.border.light}`
+                        }}>
+                          <div>
+                            <h4 style={{ 
+                              margin: '0 0 10px 0', 
+                              color: colors.text.primary,
+                              fontSize: '14px'
+                            }}>
+                              Hull Points ({result.hull_points.length} points)
+                            </h4>
+                            <div style={{
+                              maxHeight: '300px',
+                              overflowY: 'auto',
+                              padding: '10px',
+                              backgroundColor: colors.background.primary,
+                              borderRadius: '4px',
+                              border: `1px solid ${colors.border.primary}`
+                            }}>
+                              <div style={{ 
+                                display: 'grid', 
+                                gridTemplateColumns: 'repeat(5, 1fr)',
+                                gap: '8px',
+                                fontSize: '13px',
+                                fontFamily: 'monospace'
+                              }}>
+                                {result.hull_points.map((point, pointIndex) => (
+                                  <div 
+                                    key={pointIndex}
+                                    style={{
+                                      padding: '6px 10px',
+                                      backgroundColor: colors.background.secondary,
+                                      borderRadius: '4px',
+                                      border: `1px solid ${colors.border.light}`,
+                                      color: colors.text.primary
+                                    }}
+                                  >
+                                    <span style={{ color: colors.text.tertiary }}>{pointIndex + 1}:</span> ({point[0].toFixed(2)}, {point[1].toFixed(2)})
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 ))}
               </tbody>
             </table>
