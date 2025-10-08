@@ -9,7 +9,7 @@ import { colors } from './theme';
 interface CanvasProps {
   points: Point[];
   currentStep: AlgorithmStep | null;
-  onAddPoint: (point: Point) => void;
+  onAddPoint: (point: Point) => void; // callback to add a point by clicking on the canvas
   canEdit: boolean;
   isLastStep?: boolean;  // To know if we should draw complete hull
   width?: number;
@@ -27,20 +27,24 @@ export function Canvas({
   height = 700,
   margin = 30
 }: CanvasProps) {
+  // reference to the canvas a HTMLCanvasElement, which is basically the canvas we are going to use
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Handle canvas click to add points
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    // make sure algorithm is not running
     if (!canEdit) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // We get the position of the canvas on the page
+    // so we can convert the mouse click on the screen to canvas coordinates
     const rect = canvas.getBoundingClientRect();
-    let x = e.clientX - rect.left;
-    let y = e.clientY - rect.top;
+    let x = e.clientX - rect.left; // x position inside the canvas
+    let y = e.clientY - rect.top;  // y position inside the canvas
 
-    // Flip Y coordinate to match mathematical convention (Y=0 at bottom)
+    // Flip Y coordinate to match with the canvas
     y = height - y;
 
     // Constrain to margin bounds
@@ -51,152 +55,155 @@ export function Canvas({
   };
 
   // Draw the visualization
+  // Triggered when points or currentStep changes
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    const canvasContext = canvas.getContext('2d');
+    if (!canvasContext) return;
 
     // Clear canvas
-    ctx.fillStyle = colors.background.secondary;
-    ctx.fillRect(0, 0, width, height);
+    canvasContext.fillStyle = colors.background.secondary;
+    canvasContext.fillRect(0, 0, width, height);
 
-    // Draw grid (optional, subtle) - only inside the margin area
-    ctx.strokeStyle = colors.background.primary;
-    ctx.lineWidth = 1;
+    // Draw grid only inside the margin area
+    canvasContext.strokeStyle = colors.background.primary;
+    canvasContext.lineWidth = 1;
     
-    // Vertical grid lines (start from first line after margin)
+    // Vertical grid lines: Start at first multiple of 50 after margin, draw every 50px until right margin
     for (let i = Math.ceil(margin / 50) * 50; i < width - margin; i += 50) {
-      ctx.beginPath();
-      ctx.moveTo(i, margin);
-      ctx.lineTo(i, height - margin);
-      ctx.stroke();
+      canvasContext.beginPath();
+      canvasContext.moveTo(i, margin);
+      canvasContext.lineTo(i, height - margin);
+      canvasContext.stroke();
     }
     
-    // Horizontal grid lines (start from first line after margin)
+    // Horizontal grid lines: Start at first multiple of 50 after margin, draw every 50px until bottom margin
     for (let i = Math.ceil(margin / 50) * 50; i < height - margin; i += 50) {
-      ctx.beginPath();
-      ctx.moveTo(margin, i);
-      ctx.lineTo(width - margin, i);
-      ctx.stroke();
+      canvasContext.beginPath();
+      canvasContext.moveTo(margin, i);
+      canvasContext.lineTo(width - margin, i);
+      canvasContext.stroke();
     }
 
-    // Draw margin bounds (slightly more visible border)
-    ctx.strokeStyle = colors.border.primary;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(margin, margin, width - 2 * margin, height - 2 * margin);
+    // Margin bounds, little thicker border
+    canvasContext.strokeStyle = colors.border.primary;
+    canvasContext.lineWidth = 2;
+    canvasContext.strokeRect(margin, margin, width - 2 * margin, height - 2 * margin);
 
-    // Draw all points (gray)
+    // Draw all points
     points.forEach(([x, y]) => {
-      ctx.fillStyle = colors.text.quaternary;
-      ctx.beginPath();
-      // Flip Y coordinate for rendering
-      ctx.arc(x, height - y, 4, 0, 2 * Math.PI);
-      ctx.fill();
+      canvasContext.fillStyle = colors.text.quaternary;
+      canvasContext.beginPath();
+      canvasContext.arc(x, height - y, 4, 0, 2 * Math.PI); // Need to flip Y coordinate for rendering
+      canvasContext.fill();
     });
 
     if (currentStep) {
-      // QuickHull-specific visualization
+      // QuickHull-specific
       if (currentStep.dividing_line && currentStep.test_points) {
-        // Draw dividing line (purple/magenta)
+        // Draw dividing line
         const [p1, p2] = currentStep.dividing_line;
-        ctx.strokeStyle = colors.action.primary; // Purple
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(p1[0], height - p1[1]);
-        ctx.lineTo(p2[0], height - p2[1]);
-        ctx.stroke();
+        canvasContext.strokeStyle = colors.action.primary;
+        canvasContext.lineWidth = 2;
+        canvasContext.beginPath();
+        canvasContext.moveTo(p1[0], height - p1[1]);
+        canvasContext.lineTo(p2[0], height - p2[1]);
+        canvasContext.stroke();
 
         // Draw perpendicular distance lines from test points to dividing line
-        currentStep.test_points.forEach((p) => {
-          // Calculate perpendicular foot on the line
-          const [px, py] = p;
-          const [x1, y1] = p1;
-          const [x2, y2] = p2;
+        currentStep.test_points.forEach((testPoint) => {
+          // Calculate perpendicular foot/point on the line
+          const [testPointX, testPointY] = testPoint;
+          const [lineStartX, lineStartY] = p1;
+          const [lineEndX, lineEndY] = p2;
           
-          const dx = x2 - x1;
-          const dy = y2 - y1;
-          const lenSq = dx * dx + dy * dy;
+          // Berechne Richtungsvektor und Länge der Linie
+          const lineDirectionX = lineEndX - lineStartX;
+          const lineDirectionY = lineEndY - lineStartY;
+          const lineLengthSquared = lineDirectionX * lineDirectionX + lineDirectionY * lineDirectionY;
           
-          if (lenSq > 0) {
-            const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / lenSq));
-            const footX = x1 + t * dx;
-            const footY = y1 + t * dy;
+          if (lineLengthSquared > 0) {
+            // Hier Finden wir den nächsten Punkt auf der Linie zum Testpunkt (t = 0 am Startpunkt, t = 1 am Endpunkt)
+            const t = Math.max(0, Math.min(1, ((testPointX - lineStartX) * lineDirectionX + (testPointY - lineStartY) * lineDirectionY) / lineLengthSquared));
+            // Berechnet die Koordinaten des rechtwinkligen Startpunkts
+            const perpendicularFootX = lineStartX + t * lineDirectionX;
+            const perpendicularFootY = lineStartY + t * lineDirectionY;
             
-            // Draw perpendicular line
-            ctx.strokeStyle = colors.action.primary;
-            ctx.lineWidth = 1;
-            ctx.setLineDash([5, 5]); // Dashed line
-            ctx.beginPath();
-            ctx.moveTo(px, height - py);
-            ctx.lineTo(footX, height - footY);
-            ctx.stroke();
-            ctx.setLineDash([]); // Reset to solid
+            // Zeichne gestrichelte Linie vom Testpunkt zum perpendicular foot
+            canvasContext.strokeStyle = colors.action.primary;
+            canvasContext.lineWidth = 1;
+            canvasContext.setLineDash([5, 5]); // gestrichelte Linie
+            canvasContext.beginPath();
+            canvasContext.moveTo(testPointX, height - testPointY);
+            canvasContext.lineTo(perpendicularFootX, height - perpendicularFootY);
+            canvasContext.stroke();
+            canvasContext.setLineDash([]); // Reset to solid, otherwise the next line will be dashed
           }
         });
 
-        // Draw test points (yellow)
+        // Draw test points (active points)
         currentStep.test_points.forEach(([x, y]) => {
-          ctx.fillStyle = colors.action.warning;
-          ctx.beginPath();
-          ctx.arc(x, height - y, 6, 0, 2 * Math.PI);
-          ctx.fill();
-          ctx.strokeStyle = '#000';
-          ctx.lineWidth = 1;
-          ctx.stroke();
+          canvasContext.fillStyle = colors.action.warning;
+          canvasContext.beginPath();
+          canvasContext.arc(x, height - y, 6, 0, 2 * Math.PI);
+          canvasContext.fill();
+          canvasContext.strokeStyle = '#000';
+          canvasContext.lineWidth = 1;
+          canvasContext.stroke();
         });
       }
 
       // Draw hull lines
       if (currentStep.hull.length > 1) {
         // Green if last step (complete), red if in progress
-        ctx.strokeStyle = isLastStep ? colors.action.success : colors.action.danger;
-        ctx.lineWidth = isLastStep ? 3 : 2;
-        ctx.beginPath();
+        canvasContext.strokeStyle = isLastStep ? colors.action.success : colors.action.danger;
+        canvasContext.lineWidth = isLastStep ? 3 : 2;
+        canvasContext.beginPath();
         // Flip Y coordinates for rendering
-        ctx.moveTo(currentStep.hull[0][0], height - currentStep.hull[0][1]);
+        canvasContext.moveTo(currentStep.hull[0][0], height - currentStep.hull[0][1]);
         for (let i = 1; i < currentStep.hull.length; i++) {
-          ctx.lineTo(currentStep.hull[i][0], height - currentStep.hull[i][1]);
+          canvasContext.lineTo(currentStep.hull[i][0], height - currentStep.hull[i][1]);
         }
         // Close the hull if complete (last step)
         if (isLastStep) {
-          ctx.lineTo(currentStep.hull[0][0], height - currentStep.hull[0][1]);
+          canvasContext.lineTo(currentStep.hull[0][0], height - currentStep.hull[0][1]);
           
-          // Fill with semi-transparent green
-          ctx.fillStyle = 'rgba(34, 197, 94, 0.1)';
-          ctx.fill();
+          // Fill with semi-transparent green (complete hull)
+          canvasContext.fillStyle = 'rgba(34, 197, 94, 0.1)';
+          canvasContext.fill();
         }
-        ctx.stroke();
+        canvasContext.stroke();
       }
 
-      // Draw hull points (green)
+      // Draw hull points
       currentStep.hull.forEach(([x, y]) => {
-        ctx.fillStyle = colors.action.success;
-        ctx.beginPath();
+        canvasContext.fillStyle = colors.action.success;
+        canvasContext.beginPath();
         // Flip Y coordinate for rendering
-        ctx.arc(x, height - y, 5, 0, 2 * Math.PI);
-        ctx.fill();
+        canvasContext.arc(x, height - y, 5, 0, 2 * Math.PI);
+        canvasContext.fill();
         
         // Add black outline
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 1;
-        ctx.stroke();
+        canvasContext.strokeStyle = '#000';
+        canvasContext.lineWidth = 1;
+        canvasContext.stroke();
       });
 
-      // Draw active points (yellow, larger) - only if not QuickHull test points
+      // Draw active points, only if not QuickHull test points (they are already drawn as test points)
       if (!currentStep.test_points) {
         currentStep.active.forEach(([x, y]) => {
-          ctx.fillStyle = colors.action.warning;
-          ctx.beginPath();
+          canvasContext.fillStyle = colors.action.warning;
+          canvasContext.beginPath();
           // Flip Y coordinate for rendering
-          ctx.arc(x, height - y, 8, 0, 2 * Math.PI);
-          ctx.fill();
+          canvasContext.arc(x, height - y, 8, 0, 2 * Math.PI);
+          canvasContext.fill();
           
           // Add black outline
-          ctx.strokeStyle = '#000';
-          ctx.lineWidth = 2;
-          ctx.stroke();
+          canvasContext.strokeStyle = '#000';
+          canvasContext.lineWidth = 2;
+          canvasContext.stroke();
         });
       }
     }
